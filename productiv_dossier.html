@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Productiv Pro — Dossier de Publication</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+* { font-family: 'Outfit', sans-serif; box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #0a0e27; color: #f1f5f9; line-height: 1.6; }
+.page { max-width: 900px; margin: 0 auto; padding: 40px 24px 80px; }
+/* Nav tabs */
+.tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 40px; border-bottom: 1px solid rgba(99,102,241,0.2); padding-bottom: 16px; }
+.tab-btn { padding: 8px 18px; border-radius: 50px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s; background: rgba(30,41,59,0.6); color: #94a3b8; }
+.tab-btn.active { background: linear-gradient(135deg,#6366f1,#8b5cf6); color: white; }
+.tab-content { display: none; }
+.tab-content.active { display: block; animation: fadeIn 0.3s ease-out; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+/* Hero */
+.hero { text-align: center; padding: 48px 0 40px; }
+.logo { display: inline-flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+.logo-icon { width: 64px; height: 64px; }
+.app-name { font-size: 42px; font-weight: 900; background: linear-gradient(135deg,#06b6d4,#6366f1,#8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.tagline { font-size: 22px; font-weight: 600; color: #cbd5e1; margin-bottom: 12px; }
+.sub-tagline { font-size: 15px; color: #64748b; max-width: 600px; margin: 0 auto 32px; }
+.badges { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+.badge { padding: 8px 20px; border-radius: 50px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+.badge-free { background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
+.badge-edu { background: rgba(99,102,241,0.15); color: #818cf8; border: 1px solid rgba(99,102,241,0.3); }
+.badge-pwa { background: rgba(6,182,212,0.15); color: #22d3ee; border: 1px solid rgba(6,182,212,0.3); }
+/* Screenshots mockups */
+.screens { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin: 32px 0; }
+.screen { border-radius: 24px; overflow: hidden; background: linear-gradient(135deg,#0a0e27,#2d1b4e); border: 1px solid rgba(99,102,241,0.25); padding: 20px 16px; text-align: center; }
+.screen-title { font-size: 11px; font-weight: 700; color: #6366f1; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 12px; }
+.screen-preview { font-size: 10px; color: #64748b; }
+.screen-data { margin: 10px 0; }
+.stat-row { display: flex; justify-content: space-between; padding: 5px 8px; background: rgba(99,102,241,0.08); border-radius: 8px; margin-bottom: 4px; }
+.stat-label { font-size: 9px; color: #94a3b8; }
+.stat-value { font-size: 10px; font-weight: 700; color: #818cf8; }
+.big-num { font-size: 36px; font-weight: 900; background: linear-gradient(135deg,#6366f1,#d946ef); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+/* Features */
+.features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin: 24px 0; }
+.feature-card { background: rgba(30,41,59,0.5); border: 1px solid rgba(99,102,241,0.15); border-radius: 16px; padding: 20px; }
+.feature-icon { font-size: 28px; margin-bottom: 10px; }
+.feature-title { font-size: 14px; font-weight: 700; color: #e2e8f0; margin-bottom: 6px; }
+.feature-desc { font-size: 12px; color: #64748b; line-height: 1.5; }
+/* Section headers */
+h2 { font-size: 24px; font-weight: 800; color: #e2e8f0; margin: 32px 0 16px; }
+h3 { font-size: 16px; font-weight: 700; color: #a5b4fc; margin: 24px 0 10px; }
+p { color: #94a3b8; font-size: 14px; margin-bottom: 12px; }
+ul, ol { color: #94a3b8; font-size: 14px; padding-left: 20px; margin-bottom: 12px; }
+li { margin-bottom: 6px; }
+strong { color: #e2e8f0; }
+/* Ideas cards */
+.ideas-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin: 24px 0; }
+.idea-card { background: rgba(30,41,59,0.5); border-radius: 16px; padding: 20px; border-left: 3px solid #6366f1; }
+.idea-impact { display: inline-block; padding: 2px 10px; border-radius: 50px; font-size: 10px; font-weight: 700; margin-bottom: 8px; }
+.high { background: rgba(239,68,68,0.15); color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
+.med { background: rgba(245,158,11,0.15); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); }
+.low { background: rgba(99,102,241,0.15); color: #818cf8; border: 1px solid rgba(99,102,241,0.3); }
+/* Steps */
+.steps { counter-reset: step; }
+.step { display: flex; gap: 16px; margin-bottom: 20px; align-items: flex-start; }
+.step-num { width: 32px; height: 32px; background: linear-gradient(135deg,#6366f1,#8b5cf6); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; color: white; flex-shrink: 0; }
+.step-content { flex: 1; }
+/* Legal */
+.legal-box { background: rgba(30,41,59,0.4); border: 1px solid rgba(99,102,241,0.15); border-radius: 16px; padding: 24px; margin-bottom: 20px; }
+.legal-title { font-size: 16px; font-weight: 700; color: #818cf8; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid rgba(99,102,241,0.15); }
+@media (max-width: 600px) { .app-name { font-size: 28px; } .screens { grid-template-columns: 1fr 1fr; } }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- NAV TABS -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="showTab('presentation')">📱 Présentation</button>
+    <button class="tab-btn" onclick="showTab('screenshots')">🖼️ Visuels</button>
+    <button class="tab-btn" onclick="showTab('publish')">🚀 Publier l'app</button>
+    <button class="tab-btn" onclick="showTab('ideas')">💡 Idées booster</button>
+    <button class="tab-btn" onclick="showTab('legal')">⚖️ CGU & Légal</button>
+  </div>
+
+  <!-- ====== PRÉSENTATION ====== -->
+  <div id="tab-presentation" class="tab-content active">
+    <div class="hero">
+      <div class="logo">
+        <svg class="logo-icon" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="hg1" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#06b6d4"/>
+              <stop offset="40%" stop-color="#6366f1"/>
+              <stop offset="100%" stop-color="#8b5cf6"/>
+            </linearGradient>
+          </defs>
+          <rect width="64" height="64" rx="18" fill="url(#hg1)"/>
+          <rect x="14" y="18" width="24" height="6" rx="3" fill="white" opacity="0.95"/>
+          <rect x="14" y="29" width="36" height="6" rx="3" fill="white" opacity="0.8"/>
+          <rect x="14" y="40" width="16" height="6" rx="3" fill="white" opacity="0.6"/>
+          <circle cx="48" cy="19" r="9" fill="white" opacity="0.25"/>
+          <path d="M44 19l3 3 5-5" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span class="app-name">Productiv Pro</span>
+      </div>
+      <p class="tagline">Ton assistant scolaire tout-en-un 🎯</p>
+      <p class="sub-tagline">Gère tes tâches, notes, planning et habitudes pour maximiser ta réussite scolaire. Propulsé par l'IA.</p>
+      <div class="badges">
+        <span class="badge badge-free">✓ 100% Gratuit</span>
+        <span class="badge badge-edu">🎓 Pour lycéens & étudiants</span>
+        <span class="badge badge-pwa">📱 Fonctionne sur mobile</span>
+      </div>
+    </div>
+
+    <h2>🌟 Description courte (App Store)</h2>
+    <div class="legal-box">
+      <p style="color:#e2e8f0;font-size:15px;font-style:italic;">"Productiv Pro est l'application scolaire tout-en-un qui t'aide à organiser ta vie d'étudiant : gestion des tâches, suivi des notes, planning personnalisé, habitudes et assistant IA. Conçue pour les lycéens et étudiants qui veulent performer sans stress."</p>
+    </div>
+
+    <h2>📝 Description complète</h2>
+    <div class="legal-box">
+      <p><strong>Productiv Pro</strong> réunit tous les outils dont tu as besoin pour réussir ta scolarité dans une seule application moderne et intuitive.</p>
+      <h3>✅ Gestion des tâches intelligente</h3>
+      <p>Crée, organise et priorise tes tâches avec des niveaux de priorité (haute/moyenne/basse), des dates d'échéance, des tags et des filtres avancés. Reçois des notifications pour ne jamais rater une deadline.</p>
+      <h3>📊 Suivi des notes & moyennes</h3>
+      <p>Enregistre toutes tes notes avec coefficients personnalisés, visualise tes moyennes par matière avec des graphiques colorés, et définis des objectifs de moyenne à atteindre. Compatible avec toutes les matières : maths, français, langues (anglais, allemand, espagnol, latin, LCE), sciences, et plus encore.</p>
+      <h3>📅 Planning & Calendrier</h3>
+      <p>Organise ta semaine avec un planning heure par heure. Importe ton agenda Google, ajoute les vacances scolaires automatiquement (zones A, B, C), marque tes jours d'examen en rouge.</p>
+      <h3>🔥 Habitudes & Objectifs</h3>
+      <p>Crée des habitudes quotidiennes avec suivi de streak, chronomètre ton temps d'étude et booste ta productivité progressivement.</p>
+      <h3>✨ IA Assistant Pro</h3>
+      <p>Chat contextuel qui analyse tes données, mode tuteur pour t'expliquer les cours, et résumé automatique de tes cours par IA.</p>
+      <h3>📊 Dashboard Analytique</h3>
+      <p>Visualise ta progression avec des graphiques, suis ton score de productivité et compare tes performances.</p>
+    </div>
+
+    <h2>🎯 Public cible</h2>
+    <div class="features-grid">
+      <div class="feature-card"><div class="feature-icon">🏫</div><div class="feature-title">Lycéens (Secondes → Terminale)</div><div class="feature-desc">Gère les matières du lycée, le bac, les révisions et les devoirs avec des outils adaptés au programme français.</div></div>
+      <div class="feature-card"><div class="feature-icon">🎓</div><div class="feature-title">Étudiants (BTS, IUT, Fac)</div><div class="feature-desc">Suivi des projets, gestion du temps, préparation aux examens universitaires.</div></div>
+      <div class="feature-card"><div class="feature-icon">📚</div><div class="feature-title">Collégiens ambitieux</div><div class="feature-desc">Interface simple pour commencer à s'organiser dès le collège et créer de bonnes habitudes scolaires.</div></div>
+    </div>
+
+    <h2>🔑 Points forts vs concurrents</h2>
+    <div class="features-grid">
+      <div class="feature-card"><div class="feature-icon">🆓</div><div class="feature-title">100% Gratuit</div><div class="feature-desc">Aucun abonnement, aucune publicité, toutes les fonctionnalités accessibles dès le départ.</div></div>
+      <div class="feature-card"><div class="feature-icon">🇫🇷</div><div class="feature-title">Made in France</div><div class="feature-desc">Adapté au système éducatif français, vacances scolaires intégrées, matières du programme national.</div></div>
+      <div class="feature-card"><div class="feature-icon">🤖</div><div class="feature-title">IA intégrée</div><div class="feature-desc">Assistant IA, tuteur par matière et résumé de cours automatique — des fonctionnalités rares dans les apps scolaires.</div></div>
+      <div class="feature-card"><div class="feature-icon">📱</div><div class="feature-title">Multi-plateforme</div><div class="feature-desc">Fonctionne parfaitement sur iPhone, Android, Mac et PC. Pas de téléchargement requis.</div></div>
+      <div class="feature-card"><div class="feature-icon">🔒</div><div class="feature-title">100% Privé</div><div class="feature-desc">Toutes les données restent sur ton appareil. Zéro compte requis, zéro tracking.</div></div>
+      <div class="feature-card"><div class="feature-icon">⚡</div><div class="feature-title">Ultra rapide</div><div class="feature-desc">Interface fluide sans chargement, fonctionne même hors ligne.</div></div>
+    </div>
+  </div>
+
+  <!-- ====== VISUELS ====== -->
+  <div id="tab-screenshots" class="tab-content">
+    <h2>🖼️ Images de Présentation</h2>
+    <p>Aperçu des différentes fonctionnalités de l'application</p>
+
+    <div class="screens">
+      <!-- Screen 1: Home -->
+      <div class="screen">
+        <div class="screen-title">🏠 Accueil</div>
+        <div style="font-size:28px;font-weight:900;background:linear-gradient(135deg,#6366f1,#d946ef);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">73%</div>
+        <div style="font-size:9px;color:#64748b;margin-bottom:8px;">progression du jour</div>
+        <div class="screen-data">
+          <div class="stat-row"><span class="stat-label">Tâches</span><span class="stat-value">8</span></div>
+          <div class="stat-row"><span class="stat-label">Complétées</span><span class="stat-value" style="color:#34d399;">6</span></div>
+          <div class="stat-row"><span class="stat-label">Moyenne</span><span class="stat-value">14.8</span></div>
+        </div>
+        <div style="font-size:8px;color:#475569;margin-top:6px;">Badge: 🏅 10 tâches</div>
+      </div>
+      <!-- Screen 2: Tasks -->
+      <div class="screen">
+        <div class="screen-title">✅ Tâches</div>
+        <div class="screen-data">
+          <div style="padding:5px 8px;background:rgba(99,102,241,0.1);border-radius:8px;margin-bottom:4px;display:flex;align-items:center;gap:4px;"><div style="width:5px;height:5px;border-radius:50%;background:#ef4444;"></div><span style="font-size:9px;color:#cbd5e1;">Contrôle maths</span></div>
+          <div style="padding:5px 8px;background:rgba(99,102,241,0.1);border-radius:8px;margin-bottom:4px;display:flex;align-items:center;gap:4px;"><div style="width:5px;height:5px;border-radius:50%;background:#f59e0b;"></div><span style="font-size:9px;color:#cbd5e1;">Fiche SVT</span></div>
+          <div style="padding:5px 8px;background:rgba(16,185,129,0.1);border-radius:8px;margin-bottom:4px;display:flex;align-items:center;gap:4px;text-decoration:line-through;"><div style="width:5px;height:5px;border-radius:50%;background:#10b981;"></div><span style="font-size:9px;color:#64748b;">Lecture philo ✓</span></div>
+        </div>
+        <div style="font-size:8px;color:#6366f1;margin-top:4px;">+ Ajouter</div>
+      </div>
+      <!-- Screen 3: Grades -->
+      <div class="screen">
+        <div class="screen-title">📝 Notes</div>
+        <div style="font-size:24px;font-weight:900;background:linear-gradient(135deg,#8b5cf6,#d946ef);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">14.8</div>
+        <div style="font-size:8px;color:#64748b;margin-bottom:6px;">Moy. générale /20</div>
+        <div class="screen-data">
+          <div class="stat-row"><span class="stat-label">Maths</span><span class="stat-value" style="color:#10b981;">16.5</span></div>
+          <div class="stat-row"><span class="stat-label">Français</span><span class="stat-value" style="color:#3b82f6;">13.2</span></div>
+          <div class="stat-row"><span class="stat-label">Anglais</span><span class="stat-value" style="color:#10b981;">17.0</span></div>
+          <div class="stat-row"><span class="stat-label">SVT</span><span class="stat-value" style="color:#f59e0b;">11.5</span></div>
+        </div>
+      </div>
+      <!-- Screen 4: Planning -->
+      <div class="screen">
+        <div class="screen-title">📅 Planning</div>
+        <div style="font-size:10px;font-weight:700;color:#818cf8;margin-bottom:6px;">Lundi 13 jan.</div>
+        <div class="screen-data">
+          <div style="padding:4px 6px;background:rgba(239,68,68,0.1);border-left:2px solid #ef4444;border-radius:0 6px 6px 0;margin-bottom:3px;"><span style="font-size:8px;color:#f87171;">08:00 Contrôle Maths</span></div>
+          <div style="padding:4px 6px;background:rgba(99,102,241,0.1);border-left:2px solid #6366f1;border-radius:0 6px 6px 0;margin-bottom:3px;"><span style="font-size:8px;color:#a5b4fc;">10:00 Cours Français</span></div>
+          <div style="padding:4px 6px;background:rgba(16,185,129,0.1);border-left:2px solid #10b981;border-radius:0 6px 6px 0;"><span style="font-size:8px;color:#34d399;">14:00 Révision SVT</span></div>
+        </div>
+      </div>
+      <!-- Screen 5: AI -->
+      <div class="screen">
+        <div class="screen-title">✨ IA Pro</div>
+        <div style="margin-bottom:6px;">
+          <div style="padding:5px 8px;background:rgba(99,102,241,0.2);border-radius:8px 8px 2px 8px;margin-bottom:4px;"><span style="font-size:8px;color:#a5b4fc;">Quelle est ma moyenne?</span></div>
+          <div style="padding:5px 8px;background:rgba(30,41,59,0.8);border-radius:2px 8px 8px 8px;"><span style="font-size:8px;color:#cbd5e1;">📊 Ta moyenne est <b>14.8/20</b> 👍 Bon niveau!</span></div>
+        </div>
+        <div style="font-size:8px;color:#64748b;border-top:1px solid rgba(99,102,241,0.15);padding-top:6px;">Mode: Chat · Tuteur · Résumé</div>
+      </div>
+      <!-- Screen 6: Analytics -->
+      <div class="screen">
+        <div class="screen-title">📊 Analytics</div>
+        <div class="screen-data">
+          <div class="stat-row"><span class="stat-label">Complétées</span><span class="stat-value">42</span></div>
+          <div class="stat-row"><span class="stat-label">Streak</span><span class="stat-value">🔥 7</span></div>
+          <div class="stat-row"><span class="stat-label">Score prod.</span><span class="stat-value" style="color:#10b981;">78%</span></div>
+        </div>
+        <div style="display:flex;align-items:flex-end;gap:2px;margin-top:8px;height:30px;">
+          <div style="flex:1;background:#6366f1;opacity:0.4;border-radius:2px 2px 0 0;height:40%;"></div>
+          <div style="flex:1;background:#6366f1;opacity:0.6;border-radius:2px 2px 0 0;height:60%;"></div>
+          <div style="flex:1;background:#6366f1;opacity:0.8;border-radius:2px 2px 0 0;height:80%;"></div>
+          <div style="flex:1;background:#6366f1;border-radius:2px 2px 0 0;height:100%;"></div>
+          <div style="flex:1;background:#8b5cf6;border-radius:2px 2px 0 0;height:90%;"></div>
+          <div style="flex:1;background:#8b5cf6;opacity:0.7;border-radius:2px 2px 0 0;height:70%;"></div>
+          <div style="flex:1;background:#8b5cf6;opacity:0.9;border-radius:2px 2px 0 0;height:95%;"></div>
+        </div>
+      </div>
+    </div>
+
+    <h2>🎨 Identité Visuelle</h2>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">🎨</div>
+        <div class="feature-title">Couleurs principales</div>
+        <div style="display:flex;gap:8px;margin-top:8px;">
+          <div style="width:32px;height:32px;border-radius:8px;background:#06b6d4;"></div>
+          <div style="width:32px;height:32px;border-radius:8px;background:#6366f1;"></div>
+          <div style="width:32px;height:32px;border-radius:8px;background:#8b5cf6;"></div>
+          <div style="width:32px;height:32px;border-radius:8px;background:#d946ef;"></div>
+        </div>
+        <p style="margin-top:8px;font-size:11px;">Cyan · Indigo · Violet · Rose</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">✍️</div>
+        <div class="feature-title">Typographie</div>
+        <p style="font-size:24px;font-weight:900;margin-top:4px;color:#e2e8f0;">Outfit</p>
+        <p style="font-size:11px;margin-top:4px;">Moderne, lisible, disponible sur Google Fonts. Weights 300→900.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🌙</div>
+        <div class="feature-title">Thème</div>
+        <p style="font-size:12px;margin-top:4px;">Mode sombre par défaut avec fond deep-space (#0a0e27). Mode clair disponible. Couleur d'accent personnalisable.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== PUBLIER ====== -->
+  <div id="tab-publish" class="tab-content">
+    <h2>🚀 Guide de Publication</h2>
+    <p>Voici les étapes complètes pour transformer Productiv Pro en application publiée sur les stores.</p>
+
+    <h3>Option 1 — PWA (Progressive Web App) — Recommandée ✅</h3>
+    <p>La plus simple et la plus rapide. L'app fonctionne déjà comme une PWA.</p>
+    <div class="steps">
+      <div class="step"><div class="step-num">1</div><div class="step-content"><strong>Héberge l'app</strong><br><p>Mets le fichier HTML sur un serveur HTTPS. Options gratuites : Netlify, Vercel, GitHub Pages. Commande : <code style="background:rgba(99,102,241,0.2);padding:2px 6px;border-radius:4px;font-size:12px;">git push</code> → déploiement automatique.</p></div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-content"><strong>Ajoute un manifest.json</strong><br><p>Crée un fichier manifest.json avec : name, short_name, icons (192×192 et 512×512), start_url, display:"standalone", theme_color:"#0a0e27".</p></div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-content"><strong>Ajoute un Service Worker</strong><br><p>Un service worker permet le mode hors ligne et les notifications push. Utilise Workbox (Google) pour le générer automatiquement.</p></div></div>
+      <div class="step"><div class="step-num">4</div><div class="step-content"><strong>Installation sur l'écran d'accueil</strong><br><p>iOS : Safari → Partager → Sur l'écran d'accueil. Android : Chrome → ⋮ → Ajouter à l'écran d'accueil. L'app apparaît comme une vraie application.</p></div></div>
+    </div>
+
+    <h3>Option 2 — App Store / Google Play via Capacitor</h3>
+    <div class="steps">
+      <div class="step"><div class="step-num">1</div><div class="step-content"><strong>Installe Capacitor (Ionic)</strong><br><p><code style="background:rgba(99,102,241,0.2);padding:2px 6px;border-radius:4px;font-size:12px;">npm install @capacitor/core @capacitor/cli</code> puis <code style="background:rgba(99,102,241,0.2);padding:2px 6px;border-radius:4px;font-size:12px;">npx cap init</code></p></div></div>
+      <div class="step"><div class="step-num">2</div><div class="step-content"><strong>Ajoute les plateformes</strong><br><p><code style="background:rgba(99,102,241,0.2);padding:2px 6px;border-radius:4px;font-size:12px;">npx cap add ios</code> et <code style="background:rgba(99,102,241,0.2);padding:2px 6px;border-radius:4px;font-size:12px;">npx cap add android</code></p></div></div>
+      <div class="step"><div class="step-num">3</div><div class="step-content"><strong>Prépare les assets</strong><br><p>Icône 1024×1024px, splash screen, captures d'écran pour chaque plateforme (iPhone, iPad, Android).</p></div></div>
+      <div class="step"><div class="step-num">4</div><div class="step-content"><strong>App Store (Apple)</strong><br><p>Compte développeur Apple : 99$/an. Crée une fiche sur App Store Connect, soumets pour review (3-7 jours). Nécessite un Mac avec Xcode.</p></div></div>
+      <div class="step"><div class="step-num">5</div><div class="step-content"><strong>Google Play Store</strong><br><p>Compte développeur Google : frais unique 25$. Crée une fiche sur Google Play Console, soumets le fichier .aab. Review en 3-5 jours.</p></div></div>
+    </div>
+
+    <h3>📋 Checklist avant publication</h3>
+    <div class="legal-box">
+      <ul style="list-style:none;padding:0;">
+        <li>☐ Logo haute résolution (1024×1024px PNG transparent)</li>
+        <li>☐ Captures d'écran (au moins 3 par plateforme, 1242×2688px pour iPhone)</li>
+        <li>☐ Description courte (max 80 caractères)</li>
+        <li>☐ Description longue (max 4000 caractères)</li>
+        <li>☐ Mots-clés SEO (tâches, notes, lycée, scolaire, agenda, révision)</li>
+        <li>☐ Politique de confidentialité (URL publique)</li>
+        <li>☐ Conditions d'utilisation (URL publique)</li>
+        <li>☐ Catégorie : Éducation / Productivité</li>
+        <li>☐ Âge minimum : 4+ (contenu pour tous)</li>
+        <li>☐ Pays de distribution : France + Monde francophone</li>
+        <li>☐ Prix : Gratuit</li>
+        <li>☐ Email de support</li>
+        <li>☐ Site web de l'application</li>
+      </ul>
+    </div>
+
+    <h3>💰 Monétisation possible (optionnel)</h3>
+    <div class="features-grid">
+      <div class="feature-card"><div class="feature-icon">⭐</div><div class="feature-title">Productiv Pro+</div><div class="feature-desc">Version premium à 1.99€/mois : sync cloud, themes exclusifs, widgets avancés, IA illimitée.</div></div>
+      <div class="feature-card"><div class="feature-icon">🏫</div><div class="feature-title">Version École</div><div class="feature-desc">Licence établissement pour que les profs suivent les progrès des élèves. 50-500€/an par école.</div></div>
+      <div class="feature-card"><div class="feature-icon">☕</div><div class="feature-title">Ko-fi / Buy me a coffee</div><div class="feature-desc">Don libre pour soutenir le développement. Simple à mettre en place et respectueux des utilisateurs.</div></div>
+    </div>
+  </div>
+
+  <!-- ====== IDÉES ====== -->
+  <div id="tab-ideas" class="tab-content">
+    <h2>💡 Idées pour booster l'application</h2>
+    <p>Classées par impact sur l'expérience utilisateur.</p>
+
+    <div class="ideas-grid">
+      <div class="idea-card">
+        <span class="idea-impact high">🔴 Impact FORT</span>
+        <h3 style="margin:8px 0 4px;">🔄 Synchronisation Cloud</h3>
+        <p>Sauvegarder les données sur Firebase/Supabase pour accéder depuis n'importe quel appareil. Authentification avec Google Sign-In.</p>
+      </div>
+      <div class="idea-card">
+        <span class="idea-impact high">🔴 Impact FORT</span>
+        <h3 style="margin:8px 0 4px;">📸 Scanner de notes</h3>
+        <p>Photographier une note ou une copie, l'IA extrait les données (matière, note, date) et les ajoute automatiquement.</p>
+      </div>
+      <div class="idea-card">
+        <span class="idea-impact high">🔴 Impact FORT</span>
+        <h3 style="margin:8px 0 4px;">🎴 Flashcards IA</h3>
+        <p>Créer des cartes de révision automatiquement depuis un cours collé. Révision avec algorithme de spaced repetition (comme Anki).</p>
+      </div>
+      <div class="idea-card">
+        <span class="idea-impact med">🟡 Impact MOYEN</span>
+        <h3 style="margin:8px 0 4px;">👥 Partage de révisions</h3>
+        <p>Partager ses fiches et plannings de révision avec des amis via un lien. Mode "groupe de révision" collaboratif.</p>
+      </div>
+      <div class="idea-card">
+        <span class="idea-impact med">🟡 Impact MOYEN</span>
+        <h3 style="margin:8px 0 4px;">🎵 Musique Focus intégrée</h3>
+        <p>Playlists lo-fi, musique blanche, bruits de nature intégrés directement dans le mode Focus / Pomodoro.</p>
+      </div>
+      <div class="idea-card">
+        <span class="idea-impact med">🟡 Impact MOYEN</span>
+        <h3 style="margin:8px 0 4px;">📈 Prédiction de notes</h3>
+        <p>En entrant les notes déjà obtenues, l'IA calcule la note minimum à avoir pour atteindre l'objectif de moyenne.</p>
+      </div>
+      <div class="idea-card">
+        <span class="idea-impact med">🟡 Impact MOYEN</span>
+        <h3 style="margin:8px 0 4px;">🗓️ Intégration Pronote</h3>
+        <p>Importer automatiquement les notes depuis Pronote via l'API officielle. Les élèves n'auraient rien à saisir manuellement.</p>
+      </div>
+      <div class="idea-card">
+        <span class="idea-impact med">🟡 Impact MOYEN</span>
+        <h3 style="margin:8px 0 4px;">🌍 Traducteur intégré</h3>
+        <p>Dans l'onglet Outils, ajouter un traducteur rapide pour les langues (utile pour les devoirs de langues vivantes).</p>
+      </div>
+      <div class="idea-card">
+        <span class="idea-impact low">🟦 Amélioration</span>
+        <h3 style="margin:8px 0 4px;">🎨 Thèmes saisonniers</h3>
+        <p>Thèmes visuels qui changent selon la période : rentrée, Noël, printemps, vacances d'été. Animations spéciales.</p>
+      </div>
+      <div class="idea-card">
+        <span class="idea-impact low">🟦 Amélioration</span>
+        <h3 style="margin:8px 0 4px;">📊 Bilan hebdomadaire</h3>
+        <p>Chaque lundi, l'app génère un PDF/rapport de la semaine passée : tâches réalisées, temps d'étude, notes obtenues.</p>
+      </div>
+      <div class="idea-card">
+        <span class="idea-impact low">🟦 Amélioration</span>
+        <h3 style="margin:8px 0 4px;">🔔 Rappels intelligents</h3>
+        <p>Notifications push contextuelles : "Ton contrôle de maths est dans 2 jours, tu n'as pas encore révisé!" basé sur les habitudes.</p>
+      </div>
+      <div class="idea-card">
+        <span class="idea-impact low">🟦 Amélioration</span>
+        <h3 style="margin:8px 0 4px;">📱 Apple Watch / WearOS</h3>
+        <p>Complications de montre montrant la tâche du moment, le prochain cours, le temps d'étude restant.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== LÉGAL ====== -->
+  <div id="tab-legal" class="tab-content">
+    <h2>⚖️ Conditions Générales d'Utilisation</h2>
+    <p style="color:#64748b;font-size:12px;">Dernière mise à jour : janvier 2025 · Version 1.0</p>
+
+    <div class="legal-box">
+      <div class="legal-title">Article 1 — Objet et acceptation</div>
+      <p>Les présentes Conditions Générales d'Utilisation (CGU) régissent l'accès et l'utilisation de l'application web <strong>Productiv Pro</strong> (ci-après "l'Application"). En accédant à l'Application, l'utilisateur accepte sans réserve les présentes CGU.</p>
+      <p>L'Application est destinée principalement aux élèves, étudiants et toute personne souhaitant organiser leurs activités scolaires ou universitaires.</p>
+    </div>
+
+    <div class="legal-box">
+      <div class="legal-title">Article 2 — Description du service</div>
+      <p>Productiv Pro est une application web de productivité scolaire permettant :</p>
+      <ul>
+        <li>La gestion et le suivi de tâches scolaires</li>
+        <li>L'enregistrement et le calcul de notes et moyennes</li>
+        <li>La création et gestion d'un planning personnel</li>
+        <li>Le suivi d'habitudes et de temps d'étude</li>
+        <li>L'accès à un assistant pédagogique basé sur l'intelligence artificielle</li>
+        <li>Des outils de productivité (calculatrice, chronomètre, etc.)</li>
+      </ul>
+    </div>
+
+    <div class="legal-box">
+      <div class="legal-title">Article 3 — Gratuité et absence de publicité</div>
+      <p>L'Application est fournie <strong>gratuitement</strong> et sans publicité. Aucun modèle économique basé sur la revente de données ou l'affichage publicitaire n'est employé. Les données de l'utilisateur ne sont ni vendues, ni partagées avec des tiers à des fins commerciales.</p>
+    </div>
+
+    <div class="legal-box">
+      <div class="legal-title">Article 4 — Données personnelles et vie privée</div>
+      <p><strong>Stockage local :</strong> Par défaut, toutes les données saisies (tâches, notes, planning, habitudes) sont stockées localement sur l'appareil de l'utilisateur via le mécanisme localStorage du navigateur. Ces données ne quittent pas l'appareil de l'utilisateur sans son consentement explicite.</p>
+      <p><strong>Absence de collecte :</strong> L'Application ne collecte aucune donnée personnelle identifiable (nom, email, adresse IP) sans action explicite de l'utilisateur.</p>
+      <p><strong>Données mineurs :</strong> L'Application est susceptible d'être utilisée par des personnes mineures. Aucune donnée sensible n'est collectée. Les parents ou tuteurs légaux peuvent demander la suppression des données à tout moment en effaçant les données locales du navigateur.</p>
+      <p><strong>Exportation et suppression :</strong> L'utilisateur peut à tout moment exporter l'intégralité de ses données au format JSON ou les supprimer définitivement via les paramètres de l'Application.</p>
+      <p>Conformément au Règlement Général sur la Protection des Données (RGPD - Règlement UE 2016/679), l'utilisateur dispose d'un droit d'accès, de rectification, de portabilité et de suppression de ses données.</p>
+    </div>
+
+    <div class="legal-box">
+      <div class="legal-title">Article 5 — Propriété intellectuelle</div>
+      <p>L'Application, son code source, son design, ses textes et ses fonctionnalités sont protégés par le droit de la propriété intellectuelle. Toute reproduction, modification ou distribution sans autorisation expresse est interdite.</p>
+      <p>Les données saisies par l'utilisateur (notes, tâches, planning) restent la propriété exclusive de l'utilisateur.</p>
+    </div>
+
+    <div class="legal-box">
+      <div class="legal-title">Article 6 — Intelligence Artificielle</div>
+      <p>L'Application intègre des fonctionnalités basées sur l'intelligence artificielle (assistant IA, tuteur, résumé de cours). Ces fonctionnalités sont fournies à titre indicatif uniquement et ne remplacent pas un enseignant, un professionnel ou un avis qualifié.</p>
+      <p>Les réponses générées par l'IA peuvent contenir des inexactitudes. L'utilisateur est invité à vérifier les informations importantes auprès de sources fiables.</p>
+    </div>
+
+    <div class="legal-box">
+      <div class="legal-title">Article 7 — Limitation de responsabilité</div>
+      <p>L'Application est fournie "en l'état" sans garantie d'aucune sorte. Le développeur ne saurait être tenu responsable :</p>
+      <ul>
+        <li>Des pertes de données causées par une défaillance technique ou la suppression de données du navigateur</li>
+        <li>Des décisions prises sur la base des informations fournies par l'Application ou son IA</li>
+        <li>Des interruptions temporaires de service</li>
+        <li>Des dommages indirects résultant de l'utilisation de l'Application</li>
+      </ul>
+      <p>Il est fortement recommandé d'exporter régulièrement ses données (via Paramètres → Exporter JSON) à titre de sauvegarde.</p>
+    </div>
+
+    <div class="legal-box">
+      <div class="legal-title">Article 8 — Utilisation acceptable</div>
+      <p>L'utilisateur s'engage à utiliser l'Application conformément aux lois en vigueur et dans le respect d'autrui. Sont notamment interdits :</p>
+      <ul>
+        <li>Tout usage à des fins illégales ou contraires à l'ordre public</li>
+        <li>Toute tentative de contournement technique de l'Application</li>
+        <li>La reproduction ou distribution commerciale de l'Application sans autorisation</li>
+      </ul>
+    </div>
+
+    <div class="legal-box">
+      <div class="legal-title">Article 9 — Modifications des CGU</div>
+      <p>Le développeur se réserve le droit de modifier les présentes CGU à tout moment. Les utilisateurs seront informés de toute modification significative. La poursuite de l'utilisation de l'Application après modification vaut acceptation des nouvelles CGU.</p>
+    </div>
+
+    <div class="legal-box">
+      <div class="legal-title">Article 10 — Droit applicable et juridiction</div>
+      <p>Les présentes CGU sont régies par le droit français. En cas de litige relatif à l'interprétation ou l'exécution des présentes, et à défaut d'accord amiable, les tribunaux français seront seuls compétents.</p>
+    </div>
+
+    <h2>🔒 Politique de Confidentialité</h2>
+
+    <div class="legal-box">
+      <div class="legal-title">Résumé en langage simple</div>
+      <ul>
+        <li>✅ Tes données restent sur ton téléphone/ordinateur</li>
+        <li>✅ Nous ne collectons aucune donnée personnelle</li>
+        <li>✅ Aucune publicité, aucun tracking</li>
+        <li>✅ Tu peux supprimer toutes tes données à tout moment</li>
+        <li>✅ L'app fonctionne sans compte</li>
+        <li>✅ Conforme RGPD</li>
+      </ul>
+    </div>
+
+    <div class="legal-box">
+      <div class="legal-title">Données techniques</div>
+      <p><strong>Cookies et localStorage :</strong> L'Application utilise uniquement le localStorage du navigateur pour sauvegarder tes données localement. Aucun cookie de tracking n'est utilisé.</p>
+      <p><strong>Intégrations tierces :</strong> L'Application charge des bibliothèques depuis des CDN (Tailwind CSS, Lucide Icons, Chart.js, Google Fonts). Ces services peuvent enregistrer des accès dans leurs logs selon leurs propres politiques de confidentialité.</p>
+      <p><strong>Contact :</strong> Pour toute question relative à la protection de tes données, tu peux nous contacter via [adresse email à compléter].</p>
+    </div>
+
+    <h2>📄 Mentions Légales</h2>
+    <div class="legal-box">
+      <p><strong>Nom de l'application :</strong> Productiv Pro Ultra</p>
+      <p><strong>Nature :</strong> Application web (Progressive Web App)</p>
+      <p><strong>Version :</strong> 5.3</p>
+      <p><strong>Développeur :</strong> [Ton nom / Nom de ta structure]</p>
+      <p><strong>Hébergement :</strong> [À compléter selon ton hébergeur]</p>
+      <p><strong>Contact :</strong> [Ton email de contact]</p>
+      <p><strong>Droit applicable :</strong> Droit français</p>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function showTab(id) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  event.target.classList.add('active');
+}
+</script>
+</body>
+</html>

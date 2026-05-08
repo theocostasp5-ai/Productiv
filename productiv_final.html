@@ -1,0 +1,1899 @@
+<!doctype html>
+<html lang="fr" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Productiv Pro Ultra</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+* { font-family: 'Outfit', sans-serif; box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+
+:root {
+  --sidebar-w: 64px;
+  --sidebar-expanded-w: 220px;
+  --accent: #6366f1;
+  --accent2: #8b5cf6;
+  --accent3: #d946ef;
+}
+
+/* ===== LAYOUT ===== */
+.app-layout { display: flex; height: 100vh; overflow: hidden; }
+
+/* ===== SIDEBAR DESKTOP ===== */
+#sidebar {
+  width: var(--sidebar-w);
+  min-width: var(--sidebar-w);
+  height: 100vh;
+  background: rgba(10,14,39,0.98);
+  border-right: 1px solid rgba(99,102,241,0.15);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px 0 16px;
+  gap: 4px;
+  z-index: 100;
+  transition: width 0.3s cubic-bezier(0.4,0,0.2,1);
+  overflow: hidden;
+  position: relative;
+  flex-shrink: 0;
+}
+#sidebar.expanded {
+  width: var(--sidebar-expanded-w);
+  align-items: flex-start;
+  padding: 16px 8px 16px;
+}
+
+/* Expand toggle button */
+#sidebar-toggle {
+  position: fixed;
+  left: calc(var(--sidebar-w) - 10px);
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 36px;
+  background: rgba(99,102,241,0.85);
+  border: none;
+  border-radius: 0 8px 8px 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  transition: left 0.3s cubic-bezier(0.4,0,0.2,1), background 0.2s;
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+}
+#sidebar-toggle:hover { background: #6366f1; }
+#sidebar.expanded ~ #sidebar-toggle,
+body.sidebar-open #sidebar-toggle {
+  left: calc(var(--sidebar-expanded-w) - 10px);
+}
+
+/* NAV ITEM */
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 10px;
+  border-radius: 12px;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  transition: all 0.2s;
+  white-space: nowrap;
+  overflow: hidden;
+  position: relative;
+}
+.nav-item:hover { background: rgba(99,102,241,0.12); color: #e2e8f0; }
+.nav-item.active { background: rgba(99,102,241,0.2); color: #a5b4fc; }
+.nav-item .nav-icon { flex-shrink: 0; width: 22px; height: 22px; }
+.nav-label {
+  font-size: 13px;
+  font-weight: 500;
+  opacity: 0;
+  width: 0;
+  overflow: hidden;
+  transition: opacity 0.2s, width 0.3s;
+  white-space: nowrap;
+}
+#sidebar.expanded .nav-label { opacity: 1; width: auto; }
+
+/* Tooltip when collapsed */
+#sidebar:not(.expanded) .nav-item:hover::after {
+  content: attr(data-label);
+  position: absolute;
+  left: 58px;
+  background: #1e293b;
+  color: #e2e8f0;
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 999;
+  border: 1px solid rgba(99,102,241,0.3);
+}
+
+/* Active dot indicator when collapsed */
+.nav-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 20px;
+  background: var(--accent);
+  border-radius: 0 3px 3px 0;
+}
+
+/* Sidebar sections */
+.sidebar-section { width: 100%; display: flex; flex-direction: column; gap: 2px; }
+.sidebar-divider { width: 80%; height: 1px; background: rgba(99,102,241,0.15); margin: 6px auto; }
+
+/* "..." more menu */
+.more-popup {
+  position: fixed;
+  bottom: 80px;
+  left: 70px;
+  width: 200px;
+  background: rgba(10,14,39,0.98);
+  border: 1px solid rgba(99,102,241,0.25);
+  border-radius: 14px;
+  padding: 8px;
+  z-index: 500;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+  display: none;
+  backdrop-filter: blur(20px);
+}
+.more-popup.open { display: block; animation: popIn 0.2s cubic-bezier(0.34,1.56,0.64,1); }
+@keyframes popIn { from { opacity:0; transform:scale(0.9) translateY(10px); } to { opacity:1; transform:scale(1) translateY(0); } }
+.more-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-radius: 10px; cursor: pointer;
+  color: #94a3b8; font-size: 13px; font-weight: 500;
+  transition: all 0.15s;
+}
+.more-item:hover { background: rgba(99,102,241,0.15); color: #e2e8f0; }
+.more-item.active { background: rgba(99,102,241,0.2); color: #a5b4fc; }
+
+/* ===== MAIN CONTENT ===== */
+#main-content {
+  flex: 1;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* ===== MOBILE BOTTOM NAV ===== */
+#mobile-nav {
+  display: none;
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: rgba(10,14,39,0.97);
+  border-top: 1px solid rgba(99,102,241,0.2);
+  padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
+  z-index: 200;
+  backdrop-filter: blur(20px);
+}
+.mobile-nav-items {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+}
+.mob-nav-btn {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 6px 12px; border: none; background: transparent; cursor: pointer;
+  color: #64748b; transition: color 0.2s; border-radius: 8px;
+}
+.mob-nav-btn.active { color: #a5b4fc; }
+.mob-nav-btn span { font-size: 10px; font-weight: 500; }
+.mob-nav-btn svg { width: 22px; height: 22px; }
+
+/* ===== GLASS / THEME ===== */
+.glass { background: rgba(30,41,59,0.6); backdrop-filter: blur(12px); border: 1px solid rgba(100,116,139,0.2); }
+body.light-mode .glass { background: rgba(255,255,255,0.7); border: 1px solid rgba(200,213,230,0.3); }
+
+:root { --bg-grad: linear-gradient(135deg,#0a0e27 0%,#1a1f3a 25%,#2d1b4e 50%,#1a0e3d 75%,#0a0e27 100%); }
+body.light-mode { --bg-grad: linear-gradient(135deg,#f8fafc 0%,#f1f5f9 50%,#e0e7ff 100%); }
+body { background: var(--bg-grad); color: #f1f5f9; }
+body.light-mode { color: #0f172a; }
+
+/* ===== ANIMATIONS ===== */
+.fade-in { animation: fadeIn 0.35s ease-out; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+.slide-up { animation: slideUp 0.4s cubic-bezier(0.4,0,0.2,1); }
+@keyframes slideUp { from { opacity:0; transform:translateY(100%); } to { opacity:1; transform:translateY(0); } }
+.scale-in { animation: scaleIn 0.3s cubic-bezier(0.34,1.56,0.64,1); }
+@keyframes scaleIn { from { opacity:0; transform:scale(0.92); } to { opacity:1; transform:scale(1); } }
+.pulse-dot { animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+
+/* ===== UTILITIES ===== */
+.gradient-text { background: linear-gradient(135deg,#6366f1,#8b5cf6,#d946ef); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+.glow { box-shadow: 0 0 20px rgba(99,102,241,0.4), 0 0 40px rgba(139,92,246,0.2); }
+.card-hover { transition: all 0.25s cubic-bezier(0.4,0,0.2,1); }
+.card-hover:hover { transform: translateY(-3px); }
+.progress-ring { transition: stroke-dashoffset 0.6s ease; }
+.badge-glow { box-shadow: 0 0 12px rgba(245,158,11,0.4); }
+.badge-pop { animation: bpop 0.4s cubic-bezier(0.34,1.56,0.64,1); }
+@keyframes bpop { from { transform:scale(0.7); opacity:0; } to { transform:scale(1); opacity:1; } }
+.modal-overlay { backdrop-filter: blur(10px); }
+.ai-typing span { display:inline-block; width:6px; height:6px; border-radius:50%; background:#6366f1; margin:0 2px; animation:typBounce 1.4s infinite ease-in-out; }
+.ai-typing span:nth-child(2) { animation-delay:0.2s; }
+.ai-typing span:nth-child(3) { animation-delay:0.4s; }
+@keyframes typBounce { 0%,60%,100% { transform:translateY(0); } 30% { transform:translateY(-4px); } }
+.schedule-slot { transition:all 0.15s; cursor:pointer; border-radius:8px; }
+.schedule-slot:hover { background:rgba(99,102,241,0.07); }
+.template-card { transition:all 0.25s; cursor:pointer; }
+.template-card:hover { transform:translateY(-3px); }
+
+::-webkit-scrollbar { width:5px; height:5px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:#6366f1; border-radius:3px; }
+
+/* FAB */
+#fab-add {
+  position: fixed;
+  bottom: 28px; right: 28px;
+  width: 56px; height: 56px;
+  background: linear-gradient(135deg,#6366f1,#8b5cf6);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: white; cursor: pointer; border: none;
+  box-shadow: 0 0 20px rgba(99,102,241,0.4), 0 0 40px rgba(139,92,246,0.15);
+  transition: all 0.25s cubic-bezier(0.34,1.56,0.64,1);
+  z-index: 150;
+  font-size: 0;
+}
+#fab-add:hover { transform: scale(1.1); }
+#fab-add:active { transform: scale(0.95); }
+#fab-add.ripple { animation: fabRipple 0.25s ease-out; }
+@keyframes fabRipple { 0%{transform:scale(1);} 50%{transform:scale(1.3);} 100%{transform:scale(1);} }
+
+/* Mobile: fab above bottom nav */
+@media (max-width: 768px) {
+  #fab-add { bottom: 80px; right: 20px; width: 50px; height: 50px; }
+  #sidebar, #sidebar-toggle { display: none !important; }
+  #mobile-nav { display: block; }
+  #main-content { padding-bottom: 80px; }
+  .desktop-only { display: none !important; }
+}
+@media (min-width: 769px) {
+  .mobile-only { display: none !important; }
+}
+
+/* lecture mode */
+body.lecture-mode #fab-add { display: none !important; }
+
+/* Input styles */
+.input-field {
+  width: 100%;
+  padding: 10px 14px;
+  background: rgba(30,41,59,0.6);
+  border: 1px solid rgba(100,116,139,0.3);
+  border-radius: 10px;
+  color: #f1f5f9;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.input-field:focus { border-color: #6366f1; }
+body.light-mode .input-field { background: rgba(255,255,255,0.8); color: #0f172a; border-color: #cbd5e1; }
+  </style>
+</head>
+<body style="background: var(--bg-grad);">
+<div class="app-layout">
+
+  <!-- ============ SIDEBAR DESKTOP ============ -->
+  <aside id="sidebar">
+    <!-- Logo -->
+    <div class="nav-item" style="cursor:default; margin-bottom:4px; padding:8px 10px;">
+      <div class="nav-icon flex items-center justify-center rounded-lg" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);width:28px;height:28px;flex-shrink:0;">
+        <span style="color:white;font-weight:900;font-size:14px;">P</span>
+      </div>
+      <span class="nav-label" style="font-weight:800;font-size:16px;background:linear-gradient(135deg,#6366f1,#8b5cf6,#d946ef);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Productiv</span>
+    </div>
+
+    <div class="sidebar-divider"></div>
+
+    <!-- Primary nav -->
+    <div class="sidebar-section">
+      <button class="nav-item active" data-nav="home" data-label="Accueil">
+        <i data-lucide="home" class="nav-icon"></i>
+        <span class="nav-label">Accueil</span>
+      </button>
+      <button class="nav-item" data-nav="tasks" data-label="Tâches">
+        <i data-lucide="check-square" class="nav-icon"></i>
+        <span class="nav-label">Tâches</span>
+      </button>
+      <button class="nav-item" data-nav="grades" data-label="Notes">
+        <i data-lucide="book-open" class="nav-icon"></i>
+        <span class="nav-label">Notes</span>
+      </button>
+      <button class="nav-item" data-nav="average" data-label="Moyennes">
+        <i data-lucide="pie-chart" class="nav-icon"></i>
+        <span class="nav-label">Moyennes</span>
+      </button>
+      <button class="nav-item" data-nav="schedule" data-label="Planning">
+        <i data-lucide="calendar" class="nav-icon"></i>
+        <span class="nav-label">Planning</span>
+      </button>
+      <button class="nav-item" data-nav="homework" data-label="Devoirs">
+        <i data-lucide="clipboard-list" class="nav-icon"></i>
+        <span class="nav-label">Devoirs</span>
+      </button>
+    </div>
+
+    <div class="sidebar-divider"></div>
+
+    <!-- Secondary nav -->
+    <div class="sidebar-section" style="flex:1;">
+      <button class="nav-item" data-nav="search-action" data-label="Recherche" id="btn-search-nav">
+        <i data-lucide="search" class="nav-icon"></i>
+        <span class="nav-label">Recherche</span>
+      </button>
+      <button class="nav-item" data-nav="lecture-action" data-label="Mode lecture" id="btn-lecture-nav">
+        <i data-lucide="eye" class="nav-icon"></i>
+        <span class="nav-label">Mode lecture</span>
+      </button>
+    </div>
+
+    <div class="sidebar-divider"></div>
+
+    <!-- Bottom utils -->
+    <div class="sidebar-section">
+      <!-- "..." more button -->
+      <button class="nav-item" id="btn-more" data-label="Plus d'onglets">
+        <i data-lucide="more-horizontal" class="nav-icon"></i>
+        <span class="nav-label">Plus…</span>
+      </button>
+      <button class="nav-item" id="btn-theme-nav" data-label="Thème">
+        <i data-lucide="moon" class="nav-icon"></i>
+        <span class="nav-label">Thème</span>
+      </button>
+      <button class="nav-item" id="btn-settings-nav" data-label="Paramètres">
+        <i data-lucide="settings" class="nav-icon"></i>
+        <span class="nav-label">Paramètres</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Expand toggle -->
+  <button id="sidebar-toggle" aria-label="Expand sidebar">›</button>
+
+  <!-- "..." more popup -->
+  <div id="more-popup" class="more-popup">
+    <div style="font-size:11px;color:#64748b;padding:4px 12px 8px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;">Onglets supplémentaires</div>
+    <div class="more-item" data-nav="analytics"><i data-lucide="bar-chart-2" style="width:16px;height:16px;"></i> Dashboard</div>
+    <div class="more-item" data-nav="habits"><i data-lucide="flame" style="width:16px;height:16px;"></i> Habitudes</div>
+    <div class="more-item" data-nav="projects"><i data-lucide="folder" style="width:16px;height:16px;"></i> Projets</div>
+    <div class="more-item" data-nav="tools"><i data-lucide="wrench" style="width:16px;height:16px;"></i> Outils</div>
+    <div class="more-item" data-nav="templates"><i data-lucide="layout-template" style="width:16px;height:16px;"></i> Modèles</div>
+    <div class="more-item" data-nav="ai"><i data-lucide="sparkles" style="width:16px;height:16px;"></i> IA Pro</div>
+  </div>
+
+  <!-- ============ MAIN CONTENT ============ -->
+  <div id="main-content">
+    <!-- HEADER -->
+    <header class="sticky top-0 z-50 glass border-b border-slate-700/50 px-4 md:px-6 py-3 backdrop-blur-md">
+      <div class="flex items-center justify-between max-w-6xl mx-auto">
+        <div class="flex items-center gap-3">
+          <div class="mobile-only">
+            <div style="width:28px;height:28px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border-radius:8px;display:flex;align-items:center;justify-content:center;">
+              <span style="color:white;font-weight:900;font-size:13px;">P</span>
+            </div>
+          </div>
+          <div>
+            <h1 class="text-xl md:text-2xl font-bold gradient-text leading-tight">Productiv Pro</h1>
+            <p id="date-display" class="text-xs text-slate-400 hidden md:block"></p>
+          </div>
+        </div>
+        <div class="flex items-center gap-3">
+          <span id="time-display" class="text-sm font-medium text-slate-300 hidden md:block"></span>
+          <div class="w-2.5 h-2.5 rounded-full bg-green-400 pulse-dot"></div>
+        </div>
+      </div>
+    </header>
+
+    <!-- TAB CONTENT WRAPPER -->
+    <div class="p-4 md:p-6 max-w-6xl mx-auto w-full">
+
+      <!-- ====== HOME ====== -->
+      <section id="tab-home" class="tab-content fade-in space-y-5">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+          <div class="glass rounded-2xl p-5 border border-indigo-500/30">
+            <p class="text-sm text-slate-400 mb-4">📊 Progression du jour</p>
+            <div class="flex items-center justify-center mb-3 relative">
+              <svg width="130" height="130" class="transform -rotate-90">
+                <circle cx="65" cy="65" r="55" fill="none" stroke="#1e293b" stroke-width="9"/>
+                <circle id="progress-circle" cx="65" cy="65" r="55" fill="none" stroke="url(#gProg)" stroke-width="9" stroke-linecap="round" class="progress-ring"/>
+                <defs><linearGradient id="gProg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#6366f1"/><stop offset="100%" style="stop-color:#d946ef"/></linearGradient></defs>
+              </svg>
+              <div class="absolute text-center">
+                <p id="progress-percent" class="text-3xl font-bold gradient-text">0%</p>
+                <p class="text-xs text-slate-400">tâches</p>
+              </div>
+            </div>
+            <p id="progress-status" class="text-xs text-slate-400 text-center">Aucune tâche</p>
+          </div>
+          <div class="grid grid-cols-1 gap-3 md:col-span-2">
+            <div class="card-hover glass rounded-xl p-4 border border-slate-700 flex items-center gap-4">
+              <span class="text-3xl">📋</span>
+              <div><p class="text-xs text-slate-500">Total tâches</p><p id="stat-tasks" class="text-2xl font-bold gradient-text">0</p></div>
+            </div>
+            <div class="card-hover glass rounded-xl p-4 border border-slate-700 flex items-center gap-4">
+              <span class="text-3xl">✅</span>
+              <div><p class="text-xs text-slate-500">Complétées</p><p id="stat-done" class="text-2xl font-bold text-green-400">0</p></div>
+            </div>
+            <div class="card-hover glass rounded-xl p-4 border border-slate-700 flex items-center gap-4">
+              <span class="text-3xl">🎯</span>
+              <div><p class="text-xs text-slate-500">Moyenne générale</p><p id="home-avg" class="text-2xl font-bold text-indigo-400">--</p></div>
+            </div>
+          </div>
+        </div>
+        <div class="glass rounded-2xl p-5 border border-amber-500/20">
+          <h3 class="text-sm font-semibold text-amber-300 mb-3">🏆 Badges & Récompenses</h3>
+          <div id="badges-display" class="flex flex-wrap gap-2"></div>
+        </div>
+        <div class="glass rounded-2xl p-5 border border-slate-700">
+          <h3 class="text-sm font-semibold text-indigo-300 mb-3">📅 Aujourd'hui</h3>
+          <div id="home-events" class="space-y-2"><p class="text-xs text-slate-500 text-center py-3">Aucun événement</p></div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="glass rounded-2xl p-5 border border-slate-700">
+            <h3 class="text-sm font-semibold text-indigo-300 mb-3">⏭️ À venir</h3>
+            <div id="home-upcoming" class="space-y-2"><p class="text-xs text-slate-500 text-center py-3">Aucune tâche</p></div>
+          </div>
+          <div class="glass rounded-2xl p-5 border border-slate-700">
+            <h3 class="text-sm font-semibold text-indigo-300 mb-3">💡 Conseil du jour</h3>
+            <p id="daily-tip" class="text-sm text-slate-300 italic">Reste concentré, tu peux le faire! 🚀</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====== TÂCHES ====== -->
+      <section id="tab-tasks" class="tab-content hidden fade-in space-y-4">
+        <div class="flex flex-wrap gap-2">
+          <button class="day-chip active px-3 py-1.5 text-xs rounded-full font-medium bg-indigo-500 text-white" data-filter="all">Toutes</button>
+          <button class="day-chip px-3 py-1.5 text-xs rounded-full font-medium glass text-slate-300 border border-slate-600" data-filter="today">Aujourd'hui</button>
+          <button class="day-chip px-3 py-1.5 text-xs rounded-full font-medium glass text-slate-300 border border-slate-600" data-filter="overdue">En retard</button>
+          <button class="day-chip px-3 py-1.5 text-xs rounded-full font-medium glass text-slate-300 border border-slate-600" data-filter="tomorrow">Demain</button>
+        </div>
+        <div class="flex items-center justify-between">
+          <h2 class="text-base font-semibold text-slate-200">Mes tâches</h2>
+          <span id="tasks-count" class="text-xs text-slate-400">0 tâches</span>
+        </div>
+        <div id="tasks-list" class="space-y-2"></div>
+        <div id="tasks-empty" class="text-center py-12 text-slate-500">
+          <i data-lucide="check-circle-2" style="width:32px;height:32px;" class="mx-auto mb-2 opacity-50"></i>
+          <p class="text-sm">Aucune tâche · Appuie sur + pour créer</p>
+        </div>
+      </section>
+
+      <!-- ====== NOTES ====== -->
+      <section id="tab-grades" class="tab-content hidden fade-in space-y-5">
+        <div class="glass rounded-2xl p-5 border border-slate-700">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-base font-semibold text-purple-300">🎯 Objectif Général</h3>
+            <div class="flex items-center gap-3">
+              <button id="btn-import-grades" class="text-xs text-indigo-400 hover:text-indigo-300 flex items-center gap-1"><i data-lucide="upload" style="width:12px;height:12px;"></i> Importer</button>
+              <button id="btn-export-pdf" class="text-xs text-red-400 hover:text-red-300 flex items-center gap-1"><i data-lucide="file-text" style="width:12px;height:12px;"></i> PDF</button>
+              <button id="btn-set-objective" class="text-xs text-purple-400 hover:text-purple-300">Modifier objectif</button>
+            </div>
+          </div>
+          <div class="flex items-center gap-4">
+            <div class="text-4xl font-bold gradient-text" id="objective-display">--</div>
+            <div class="flex-1">
+              <div class="w-full h-2.5 bg-slate-700 rounded-full overflow-hidden">
+                <div id="objective-progress" class="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all" style="width:0%;"></div>
+              </div>
+              <p class="text-xs text-slate-400 mt-1.5" id="objective-status">Définis ton objectif</p>
+            </div>
+          </div>
+        </div>
+        <div class="glass rounded-2xl p-5 border border-slate-700">
+          <h3 class="text-base font-semibold text-indigo-300 mb-4">📖 Toutes les notes</h3>
+          <div id="grades-list" class="space-y-2"></div>
+          <p id="grades-empty" class="text-center py-6 text-slate-500 text-sm">Aucune note · Appuie sur + pour en ajouter</p>
+        </div>
+      </section>
+
+      <!-- ====== MOYENNES ====== -->
+      <section id="tab-average" class="tab-content hidden fade-in space-y-5">
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div class="glass rounded-2xl p-5 border border-indigo-500/30 col-span-2 md:col-span-1">
+            <p class="text-sm text-slate-400 mb-2">📊 Moyenne générale</p>
+            <div class="text-4xl font-bold gradient-text" id="avg-general">--</div>
+            <p class="text-xs text-slate-500 mt-1">tous coefficients</p>
+          </div>
+          <div class="glass rounded-2xl p-5 border border-slate-700">
+            <p class="text-sm text-slate-400 mb-2">📝 Matières</p>
+            <div id="avg-subjects-count" class="text-3xl font-bold text-indigo-400">0</div>
+          </div>
+          <div class="glass rounded-2xl p-5 border border-slate-700 hidden md:block">
+            <p class="text-sm text-slate-400 mb-2">📈 Tendance</p>
+            <div id="avg-trend" class="text-sm text-slate-300">—</div>
+          </div>
+        </div>
+        <div class="glass rounded-2xl p-5 border border-slate-700">
+          <h3 class="text-base font-semibold text-indigo-300 mb-4">📊 Graphique des moyennes</h3>
+          <canvas id="chart-subjects" height="100"></canvas>
+        </div>
+        <div class="glass rounded-2xl p-5 border border-slate-700">
+          <h3 class="text-base font-semibold text-indigo-300 mb-4">Par matière</h3>
+          <div id="grades-by-subject" class="space-y-3"></div>
+        </div>
+      </section>
+
+      <!-- ====== PLANNING ====== -->
+      <section id="tab-schedule" class="tab-content hidden fade-in space-y-4">
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <h2 class="text-base font-semibold text-slate-200">📅 Planning</h2>
+          <div class="flex gap-2 flex-wrap">
+            <button id="btn-add-exam-day" class="glass px-3 py-1.5 text-xs font-medium text-red-300 border border-red-600/50 rounded-lg hover:bg-red-500/10 transition-all">🔴 Examen</button>
+            <button id="btn-add-vacation" class="glass px-3 py-1.5 text-xs font-medium text-green-300 border border-green-600/50 rounded-lg hover:bg-green-500/10 transition-all">🟢 Vacances</button>
+            <button id="btn-prev-day" class="w-8 h-8 glass border border-slate-600 rounded-lg flex items-center justify-center hover:border-indigo-500 transition-all"><i data-lucide="chevron-left" style="width:15px;height:15px;"></i></button>
+            <button id="btn-next-day" class="w-8 h-8 glass border border-slate-600 rounded-lg flex items-center justify-center hover:border-indigo-500 transition-all"><i data-lucide="chevron-right" style="width:15px;height:15px;"></i></button>
+          </div>
+        </div>
+        <div id="day-selector" class="flex gap-2 overflow-x-auto pb-1"></div>
+        <div id="current-day-display" class="text-sm font-semibold text-indigo-300"></div>
+        <div id="schedule-grid" class="space-y-0.5 glass rounded-xl p-4 border border-slate-700 max-h-80 overflow-y-auto"></div>
+      </section>
+
+      <!-- ====== DEVOIRS ====== -->
+      <section id="tab-homework" class="tab-content hidden fade-in space-y-4">
+        <div class="flex items-center justify-between">
+          <h2 class="text-base font-semibold text-slate-200">📋 Devoirs</h2>
+          <span id="homework-count" class="text-xs text-slate-400"></span>
+        </div>
+        <div id="homework-list" class="space-y-2"></div>
+        <div id="homework-empty" class="text-center py-12 text-slate-500 text-sm">Aucun devoir · Appuie sur + pour en ajouter</div>
+      </section>
+
+      <!-- ====== HABITUDES ====== -->
+      <section id="tab-habits" class="tab-content hidden fade-in space-y-4">
+        <div class="flex items-center justify-between">
+          <h2 class="text-base font-semibold text-slate-200">🔥 Habitudes</h2>
+        </div>
+        <div class="glass rounded-2xl p-5 border border-slate-700">
+          <h3 class="text-sm font-semibold text-indigo-300 mb-3">⏱️ Temps d'étude aujourd'hui</h3>
+          <div class="flex items-center gap-4 flex-wrap">
+            <div class="text-3xl font-bold gradient-text" id="study-time-display">0h 0m</div>
+            <div class="flex gap-2">
+              <button id="btn-study-start" class="px-3 py-1.5 text-xs bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all">▶ Démarrer</button>
+              <button id="btn-study-stop" class="px-3 py-1.5 text-xs bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all" disabled>⏸ Arrêter</button>
+            </div>
+          </div>
+          <div id="study-history" class="mt-3 space-y-1"></div>
+        </div>
+        <div id="habits-list" class="space-y-2"></div>
+        <div id="habits-empty" class="text-center py-12 text-slate-500 text-sm">Aucune habitude · Appuie sur + pour en créer</div>
+      </section>
+
+      <!-- ====== PROJETS ====== -->
+      <section id="tab-projects" class="tab-content hidden fade-in space-y-4">
+        <h2 class="text-base font-semibold text-slate-200">📁 Projets</h2>
+        <div id="projects-list" class="space-y-2"></div>
+        <div id="projects-empty" class="text-center py-12 text-slate-500 text-sm">Aucun projet · Appuie sur + pour en créer</div>
+      </section>
+
+      <!-- ====== ANALYTICS ====== -->
+      <section id="tab-analytics" class="tab-content hidden fade-in space-y-5">
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <h2 class="text-base font-semibold text-slate-200">📊 Dashboard Analytique</h2>
+          <div class="flex gap-2">
+            <button class="analytics-period active px-3 py-1.5 text-xs rounded-full font-medium bg-indigo-500 text-white" data-period="week">Semaine</button>
+            <button class="analytics-period px-3 py-1.5 text-xs rounded-full font-medium glass text-slate-300 border border-slate-600" data-period="month">Mois</button>
+            <button class="analytics-period px-3 py-1.5 text-xs rounded-full font-medium glass text-slate-300 border border-slate-600" data-period="all">Tout</button>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div class="glass rounded-2xl p-4 border border-indigo-500/30">
+            <p class="text-xs text-slate-400 mb-1">Tâches complétées</p>
+            <p id="analytics-tasks-done" class="text-3xl font-bold gradient-text">0</p>
+          </div>
+          <div class="glass rounded-2xl p-4 border border-slate-700">
+            <p class="text-xs text-slate-400 mb-1">Meilleur streak</p>
+            <p id="analytics-streak" class="text-3xl font-bold text-amber-400">0🔥</p>
+          </div>
+          <div class="glass rounded-2xl p-4 border border-slate-700 col-span-2 md:col-span-1">
+            <p class="text-xs text-slate-400 mb-1">Score productivité</p>
+            <p id="analytics-score" class="text-3xl font-bold text-green-400">0%</p>
+          </div>
+        </div>
+        <div class="glass rounded-2xl p-5 border border-slate-700">
+          <h3 class="text-sm font-semibold text-indigo-300 mb-3">📈 Tâches — 7 derniers jours</h3>
+          <canvas id="chart-weekly-tasks" height="100"></canvas>
+        </div>
+        <div class="glass rounded-2xl p-5 border border-slate-700">
+          <h3 class="text-sm font-semibold text-indigo-300 mb-3">📚 Répartition par matière</h3>
+          <canvas id="chart-study-subject" height="100"></canvas>
+        </div>
+        <div class="glass rounded-2xl p-5 border border-purple-500/20">
+          <h3 class="text-sm font-semibold text-purple-300 mb-3">🏆 Classement productivité</h3>
+          <div id="leaderboard" class="space-y-2"></div>
+        </div>
+      </section>
+
+      <!-- ====== OUTILS ====== -->
+      <section id="tab-tools" class="tab-content hidden fade-in space-y-5">
+        <h2 class="text-base font-semibold text-slate-200">🛠 Outils</h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <button class="tool-card card-hover glass rounded-xl p-4 text-left border border-slate-700 hover:border-indigo-500 transition-all group" data-tool="calculator"><span class="text-2xl">🧮</span><p class="text-xs font-semibold text-slate-300 mt-2">Calculatrice</p></button>
+          <button class="tool-card card-hover glass rounded-xl p-4 text-left border border-slate-700 hover:border-green-500 transition-all group" data-tool="converter"><span class="text-2xl">⚖️</span><p class="text-xs font-semibold text-slate-300 mt-2">Convertisseur</p></button>
+          <button class="tool-card card-hover glass rounded-xl p-4 text-left border border-slate-700 hover:border-blue-500 transition-all group" data-tool="timer"><span class="text-2xl">⏱️</span><p class="text-xs font-semibold text-slate-300 mt-2">Chrono</p></button>
+          <button class="tool-card card-hover glass rounded-xl p-4 text-left border border-slate-700 hover:border-purple-500 transition-all group" data-tool="focus"><span class="text-2xl">🎯</span><p class="text-xs font-semibold text-slate-300 mt-2">Focus</p></button>
+          <button class="tool-card card-hover glass rounded-xl p-4 text-left border border-slate-700 hover:border-rose-500 transition-all group" data-tool="notes"><span class="text-2xl">📝</span><p class="text-xs font-semibold text-slate-300 mt-2">Notes rapides</p></button>
+          <button class="tool-card card-hover glass rounded-xl p-4 text-left border border-slate-700 hover:border-cyan-500 transition-all group" data-tool="word-counter"><span class="text-2xl">📊</span><p class="text-xs font-semibold text-slate-300 mt-2">Compteur mots</p></button>
+          <button class="tool-card card-hover glass rounded-xl p-4 text-left border border-slate-700 hover:border-amber-500 transition-all group" data-tool="password"><span class="text-2xl">🔐</span><p class="text-xs font-semibold text-slate-300 mt-2">Générateur</p></button>
+          <button class="tool-card card-hover glass rounded-xl p-4 text-left border border-slate-700 hover:border-pink-500 transition-all group" data-tool="gpa"><span class="text-2xl">📈</span><p class="text-xs font-semibold text-slate-300 mt-2">GPA Calc</p></button>
+          <button class="tool-card card-hover glass rounded-xl p-4 text-left border border-slate-700 hover:border-orange-500 transition-all group" data-tool="colors"><span class="text-2xl">🎨</span><p class="text-xs font-semibold text-slate-300 mt-2">Couleurs</p></button>
+        </div>
+        <div id="tool-content" class="glass rounded-xl p-5 border border-slate-700 scale-in min-h-10"></div>
+      </section>
+
+      <!-- ====== MODÈLES ====== -->
+      <section id="tab-templates" class="tab-content hidden fade-in space-y-4">
+        <div>
+          <h2 class="text-base font-semibold text-slate-200">📚 Bibliothèque de Modèles</h2>
+          <p class="text-xs text-slate-400 mt-1">Clique pour importer automatiquement</p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="templates-grid"></div>
+      </section>
+
+      <!-- ====== IA ====== -->
+      <section id="tab-ai" class="tab-content hidden fade-in space-y-5">
+        <div class="glass rounded-xl border border-slate-700 p-5">
+          <h2 class="text-base font-semibold text-indigo-300 mb-1">✨ IA Assistant Pro</h2>
+          <p class="text-xs text-slate-400 mb-4">Tuteur IA avec mémoire contextuelle & résumé de cours</p>
+          <div class="flex gap-2 mb-4 flex-wrap">
+            <button class="ai-mode-btn active px-3 py-1.5 text-xs rounded-full font-medium bg-indigo-500 text-white" data-mode="chat">💬 Chat</button>
+            <button class="ai-mode-btn px-3 py-1.5 text-xs rounded-full font-medium glass text-slate-300 border border-slate-600" data-mode="tutor">🎓 Tuteur</button>
+            <button class="ai-mode-btn px-3 py-1.5 text-xs rounded-full font-medium glass text-slate-300 border border-slate-600" data-mode="summary">📄 Résumé</button>
+          </div>
+          <!-- Chat -->
+          <div id="ai-chat-mode">
+            <div id="ai-chat" class="h-72 overflow-y-auto space-y-3 mb-4 p-3 bg-slate-900/50 rounded-xl border border-slate-700"></div>
+            <div class="flex gap-2">
+              <input id="ai-input" type="text" placeholder="Pose ta question..." class="input-field flex-1 text-sm">
+              <button id="btn-ai-send" class="bg-gradient-to-r from-indigo-500 to-purple-500 text-white px-4 py-2.5 rounded-xl text-sm font-medium glow transition-all"><i data-lucide="send" style="width:15px;height:15px;"></i></button>
+            </div>
+          </div>
+          <!-- Tutor -->
+          <div id="ai-tutor-mode" class="hidden space-y-3">
+            <select id="tutor-subject" class="input-field text-sm">
+              <option>Mathématiques</option><option>Français</option><option>Physique-Chimie</option><option>SVT</option><option>Histoire-Géo</option><option>Anglais</option><option>Philosophie</option><option>Informatique</option>
+            </select>
+            <textarea id="tutor-question" rows="4" placeholder="Explique-moi ce concept..." class="input-field text-sm resize-none"></textarea>
+            <button id="btn-tutor-ask" class="w-full bg-gradient-to-r from-green-500 to-emerald-500 text-white py-2.5 rounded-xl text-sm font-medium hover:shadow-lg transition-all">🎓 Demander au tuteur</button>
+            <div id="tutor-response" class="hidden p-4 glass rounded-xl border border-green-500/30 text-sm text-slate-300 leading-relaxed"></div>
+          </div>
+          <!-- Summary -->
+          <div id="ai-summary-mode" class="hidden space-y-3">
+            <textarea id="summary-input" rows="7" placeholder="Colle ton cours ici..." class="input-field text-sm resize-none"></textarea>
+            <button id="btn-summarize" class="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-2.5 rounded-xl text-sm font-medium hover:shadow-lg transition-all">📄 Résumer le cours</button>
+            <div id="summary-result" class="hidden p-4 glass rounded-xl border border-purple-500/30 text-sm text-slate-300"></div>
+          </div>
+        </div>
+      </section>
+
+    </div><!-- end content wrapper -->
+  </div><!-- end main-content -->
+</div><!-- end app-layout -->
+
+<!-- ====== MOBILE BOTTOM NAV ====== -->
+<nav id="mobile-nav">
+  <div class="mobile-nav-items px-2">
+    <button class="mob-nav-btn active" data-nav="home">
+      <i data-lucide="home"></i><span>Accueil</span>
+    </button>
+    <button class="mob-nav-btn" data-nav="tasks">
+      <i data-lucide="check-square"></i><span>Tâches</span>
+    </button>
+    <button class="mob-nav-btn" data-nav="grades">
+      <i data-lucide="book-open"></i><span>Notes</span>
+    </button>
+    <button class="mob-nav-btn" data-nav="schedule">
+      <i data-lucide="calendar"></i><span>Planning</span>
+    </button>
+    <button class="mob-nav-btn" id="mob-more-btn">
+      <i data-lucide="more-horizontal"></i><span>Plus</span>
+    </button>
+  </div>
+</nav>
+
+<!-- Mobile more sheet -->
+<div id="mob-more-sheet" class="fixed inset-0 z-[300] hidden">
+  <div class="absolute inset-0 bg-black/50" id="mob-more-overlay"></div>
+  <div class="absolute bottom-0 left-0 right-0 glass border-t border-indigo-500/30 rounded-t-2xl p-5 slide-up">
+    <div class="w-10 h-1 bg-slate-600 rounded-full mx-auto mb-5"></div>
+    <h3 class="text-sm font-semibold text-slate-300 mb-4">Plus d'onglets</h3>
+    <div class="grid grid-cols-3 gap-3">
+      <button class="mob-more-item glass rounded-xl p-3 flex flex-col items-center gap-2 border border-slate-700 hover:border-indigo-500 transition-all" data-nav="homework"><i data-lucide="clipboard-list" style="width:20px;height:20px;color:#94a3b8;"></i><span class="text-xs text-slate-300">Devoirs</span></button>
+      <button class="mob-more-item glass rounded-xl p-3 flex flex-col items-center gap-2 border border-slate-700 hover:border-indigo-500 transition-all" data-nav="average"><i data-lucide="pie-chart" style="width:20px;height:20px;color:#94a3b8;"></i><span class="text-xs text-slate-300">Moyennes</span></button>
+      <button class="mob-more-item glass rounded-xl p-3 flex flex-col items-center gap-2 border border-slate-700 hover:border-indigo-500 transition-all" data-nav="analytics"><i data-lucide="bar-chart-2" style="width:20px;height:20px;color:#94a3b8;"></i><span class="text-xs text-slate-300">Analytics</span></button>
+      <button class="mob-more-item glass rounded-xl p-3 flex flex-col items-center gap-2 border border-slate-700 hover:border-indigo-500 transition-all" data-nav="habits"><i data-lucide="flame" style="width:20px;height:20px;color:#94a3b8;"></i><span class="text-xs text-slate-300">Habitudes</span></button>
+      <button class="mob-more-item glass rounded-xl p-3 flex flex-col items-center gap-2 border border-slate-700 hover:border-indigo-500 transition-all" data-nav="projects"><i data-lucide="folder" style="width:20px;height:20px;color:#94a3b8;"></i><span class="text-xs text-slate-300">Projets</span></button>
+      <button class="mob-more-item glass rounded-xl p-3 flex flex-col items-center gap-2 border border-slate-700 hover:border-indigo-500 transition-all" data-nav="tools"><i data-lucide="wrench" style="width:20px;height:20px;color:#94a3b8;"></i><span class="text-xs text-slate-300">Outils</span></button>
+      <button class="mob-more-item glass rounded-xl p-3 flex flex-col items-center gap-2 border border-slate-700 hover:border-indigo-500 transition-all" data-nav="templates"><i data-lucide="layout-template" style="width:20px;height:20px;color:#94a3b8;"></i><span class="text-xs text-slate-300">Modèles</span></button>
+      <button class="mob-more-item glass rounded-xl p-3 flex flex-col items-center gap-2 border border-slate-700 hover:border-indigo-500 transition-all" data-nav="ai"><i data-lucide="sparkles" style="width:20px;height:20px;color:#94a3b8;"></i><span class="text-xs text-slate-300">IA Pro</span></button>
+      <button class="mob-more-item glass rounded-xl p-3 flex flex-col items-center gap-2 border border-slate-700 hover:border-purple-500 transition-all" id="mob-settings-btn"><i data-lucide="settings" style="width:20px;height:20px;color:#94a3b8;"></i><span class="text-xs text-slate-300">Paramètres</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- FAB -->
+<button id="fab-add" aria-label="Ajouter">
+  <i data-lucide="plus" style="width:24px;height:24px;"></i>
+</button>
+
+<!-- ====== MODALE TOUT CRÉER (double clic FAB) ====== -->
+<div id="modal-add" class="fixed inset-0 z-[400] hidden">
+  <div class="modal-overlay absolute inset-0 bg-black/50" id="modal-add-overlay"></div>
+  <div class="absolute bottom-0 left-0 right-0 md:left-1/2 md:-translate-x-1/2 md:bottom-auto md:top-1/2 md:-translate-y-1/2 md:max-w-md md:rounded-2xl bg-slate-800 border border-slate-700 rounded-t-3xl p-6 slide-up max-h-[85%] overflow-auto">
+    <div class="flex items-center justify-between mb-2">
+      <h3 class="text-base font-bold text-slate-200">🚀 Créer quelque chose</h3>
+      <span class="text-xs text-slate-500 glass px-2 py-0.5 rounded-full">double appui</span>
+    </div>
+    <p class="text-xs text-slate-500 mb-5">Choisis ce que tu veux ajouter</p>
+    <div class="grid grid-cols-2 gap-3">
+      <button class="add-opt card-hover glass p-4 rounded-xl text-left border border-blue-600/30 hover:border-blue-400 transition-all" data-type="task"><span class="text-2xl">✅</span><p class="text-sm font-semibold text-slate-200 mt-2">Tâche</p></button>
+      <button class="add-opt card-hover glass p-4 rounded-xl text-left border border-purple-600/30 hover:border-purple-400 transition-all" data-type="event"><span class="text-2xl">📅</span><p class="text-sm font-semibold text-slate-200 mt-2">Événement</p></button>
+      <button class="add-opt card-hover glass p-4 rounded-xl text-left border border-amber-600/30 hover:border-amber-400 transition-all" data-type="habit"><span class="text-2xl">🔥</span><p class="text-sm font-semibold text-slate-200 mt-2">Habitude</p></button>
+      <button class="add-opt card-hover glass p-4 rounded-xl text-left border border-green-600/30 hover:border-green-400 transition-all" data-type="project"><span class="text-2xl">📁</span><p class="text-sm font-semibold text-slate-200 mt-2">Projet</p></button>
+      <button class="add-opt card-hover glass p-4 rounded-xl text-left border border-pink-600/30 hover:border-pink-400 transition-all" data-type="grade"><span class="text-2xl">📝</span><p class="text-sm font-semibold text-slate-200 mt-2">Note</p></button>
+      <button class="add-opt card-hover glass p-4 rounded-xl text-left border border-cyan-600/30 hover:border-cyan-400 transition-all" data-type="homework"><span class="text-2xl">📋</span><p class="text-sm font-semibold text-slate-200 mt-2">Devoir</p></button>
+    </div>
+  </div>
+</div>
+
+<!-- ====== MODALE FORM GÉNÉRIQUE ====== -->
+<div id="modal-form" class="fixed inset-0 z-[400] hidden">
+  <div class="modal-overlay absolute inset-0 bg-black/50" id="modal-form-overlay"></div>
+  <div class="absolute bottom-0 left-0 right-0 md:left-1/2 md:-translate-x-1/2 md:bottom-auto md:top-1/2 md:-translate-y-1/2 md:max-w-md md:rounded-2xl bg-slate-800 border border-slate-700 rounded-t-3xl p-6 slide-up max-h-[90%] overflow-auto">
+    <h3 id="form-title" class="text-base font-bold text-slate-200 mb-4"></h3>
+    <form id="create-form" class="space-y-3">
+      <div><label class="text-xs font-medium text-slate-400">Titre *</label><input id="input-title" type="text" required class="input-field mt-1 text-sm"></div>
+      <div><label class="text-xs font-medium text-slate-400">Description</label><textarea id="input-desc" rows="2" class="input-field mt-1 text-sm resize-none"></textarea></div>
+      <div id="date-field" class="hidden"><label class="text-xs font-medium text-slate-400">Date</label><input id="input-due-date" type="date" class="input-field mt-1 text-sm"></div>
+      <div id="time-fields" class="hidden grid grid-cols-2 gap-2">
+        <div><label class="text-xs font-medium text-slate-400">Début</label><input id="input-time-start" type="time" class="input-field mt-1 text-sm"></div>
+        <div><label class="text-xs font-medium text-slate-400">Fin</label><input id="input-time-end" type="time" class="input-field mt-1 text-sm"></div>
+      </div>
+      <div id="priority-field" class="hidden">
+        <label class="text-xs font-medium text-slate-400">Priorité</label>
+        <div class="flex gap-2 mt-2">
+          <button type="button" class="priority-btn px-3 py-1.5 text-xs rounded-full glass border border-green-600 text-green-400" data-priority="low">Basse</button>
+          <button type="button" class="priority-btn px-3 py-1.5 text-xs rounded-full glass border border-amber-600 text-amber-400" data-priority="medium">Moyenne</button>
+          <button type="button" class="priority-btn px-3 py-1.5 text-xs rounded-full glass border border-red-600 text-red-400" data-priority="high">Haute</button>
+        </div>
+      </div>
+      <div><label class="text-xs font-medium text-slate-400">Tags (virgule)</label><input id="input-tags" type="text" placeholder="maths, urgent, exam..." class="input-field mt-1 text-sm"></div>
+      <input type="hidden" id="input-type" value="">
+      <input type="hidden" id="input-priority" value="medium">
+      <button type="submit" class="w-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white py-3 rounded-xl font-medium text-sm mt-2 hover:shadow-lg glow transition-all">Créer</button>
+    </form>
+  </div>
+</div>
+
+<!-- ====== MODALE NOTE ====== -->
+<div id="modal-grade-form" class="fixed inset-0 z-[400] hidden">
+  <div class="modal-overlay absolute inset-0 bg-black/50" id="modal-grade-form-overlay"></div>
+  <div class="absolute bottom-0 left-0 right-0 md:left-1/2 md:-translate-x-1/2 md:bottom-auto md:top-1/2 md:-translate-y-1/2 md:max-w-md md:rounded-2xl bg-slate-800 border border-slate-700 rounded-t-3xl p-6 slide-up max-h-[90%] overflow-auto">
+    <h3 class="text-base font-bold text-slate-200 mb-4">📝 Ajouter une note</h3>
+    <form id="grade-form" class="space-y-3">
+      <div><label class="text-xs font-medium text-slate-400">Matière *</label>
+        <select id="grade-subject" class="input-field mt-1 text-sm">
+          <option>Français</option><option>Mathématiques</option><option>Anglais</option><option>Physique-Chimie</option><option>SVT</option><option>Histoire-Géo</option><option>Informatique</option><option>EPS</option><option>Philosophie</option><option>Art</option><option>Autre...</option>
+        </select>
+      </div>
+      <div class="grid grid-cols-2 gap-2">
+        <div><label class="text-xs font-medium text-slate-400">Note * (/20)</label><input id="grade-value" type="number" min="0" max="20" step="0.5" class="input-field mt-1 text-sm"></div>
+        <div><label class="text-xs font-medium text-slate-400">Coefficient</label><input id="grade-weight" type="number" min="0.5" step="0.5" value="1" class="input-field mt-1 text-sm"></div>
+      </div>
+      <div><label class="text-xs font-medium text-slate-400">Date</label><input id="grade-date" type="date" class="input-field mt-1 text-sm"></div>
+      <button type="submit" class="w-full bg-gradient-to-r from-green-500 to-emerald-500 text-white py-3 rounded-xl font-medium text-sm mt-2 hover:shadow-lg transition-all">Enregistrer</button>
+    </form>
+  </div>
+</div>
+
+<!-- ====== MODALE OBJECTIF ====== -->
+<div id="modal-objective" class="fixed inset-0 z-[400] hidden">
+  <div class="modal-overlay absolute inset-0 bg-black/50" id="modal-objective-overlay"></div>
+  <div class="absolute bottom-0 left-0 right-0 md:left-1/2 md:-translate-x-1/2 md:bottom-auto md:top-1/2 md:-translate-y-1/2 md:max-w-sm md:rounded-2xl bg-slate-800 border border-slate-700 rounded-t-3xl p-6 slide-up">
+    <h3 class="text-base font-bold text-slate-200 mb-4">🎯 Objectif de moyenne</h3>
+    <form id="objective-form" class="space-y-3">
+      <div><label class="text-xs font-medium text-slate-400">Moyenne souhaitée (/20)</label><input id="objective-value" type="number" min="0" max="20" step="0.5" class="input-field mt-1 text-sm"></div>
+      <button type="submit" class="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-3 rounded-xl font-medium text-sm mt-2 hover:shadow-lg transition-all">Définir</button>
+    </form>
+  </div>
+</div>
+
+<!-- ====== MODALE RECHERCHE ====== -->
+<div id="modal-search" class="fixed inset-0 z-[400] hidden">
+  <div class="modal-overlay absolute inset-0 bg-black/50" id="modal-search-overlay"></div>
+  <div class="absolute top-16 left-1/2 -translate-x-1/2 w-full max-w-lg px-4 scale-in">
+    <div class="bg-slate-800 border border-slate-700 rounded-2xl p-5 shadow-2xl">
+      <h3 class="text-base font-bold text-slate-200 mb-3">🔍 Recherche</h3>
+      <input id="search-input" type="text" placeholder="Titre, tag, matière, priorité..." class="input-field text-sm mb-3">
+      <div class="flex gap-2 mb-4 flex-wrap">
+        <button class="search-type active text-xs px-2.5 py-1 rounded-full bg-indigo-500 text-white" data-stype="all">Tout</button>
+        <button class="search-type text-xs px-2.5 py-1 rounded-full glass border border-slate-600 text-slate-300" data-stype="task">Tâches</button>
+        <button class="search-type text-xs px-2.5 py-1 rounded-full glass border border-slate-600 text-slate-300" data-stype="event">Événements</button>
+        <button class="search-type text-xs px-2.5 py-1 rounded-full glass border border-slate-600 text-slate-300" data-stype="grade">Notes</button>
+        <button class="search-type text-xs px-2.5 py-1 rounded-full glass border border-slate-600 text-slate-300" data-stype="homework">Devoirs</button>
+      </div>
+      <div id="search-results" class="space-y-2 max-h-64 overflow-y-auto"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ====== MODALE CAL EVENTS ====== -->
+<div id="modal-cal-event" class="fixed inset-0 z-[400] hidden">
+  <div class="modal-overlay absolute inset-0 bg-black/50" id="modal-cal-event-overlay"></div>
+  <div class="absolute bottom-0 left-0 right-0 md:left-1/2 md:-translate-x-1/2 md:bottom-auto md:top-1/2 md:-translate-y-1/2 md:max-w-md md:rounded-2xl bg-slate-800 border border-slate-700 rounded-t-3xl p-6 slide-up">
+    <h3 id="cal-event-title" class="text-base font-bold text-slate-200 mb-4"></h3>
+    <form id="cal-event-form" class="space-y-3">
+      <div><label class="text-xs font-medium text-slate-400">Titre</label><input id="cal-event-name" type="text" required class="input-field mt-1 text-sm"></div>
+      <div class="grid grid-cols-2 gap-2">
+        <div><label class="text-xs font-medium text-slate-400">Début</label><input id="cal-start" type="date" required class="input-field mt-1 text-sm"></div>
+        <div><label class="text-xs font-medium text-slate-400">Fin</label><input id="cal-end" type="date" class="input-field mt-1 text-sm"></div>
+      </div>
+      <input type="hidden" id="cal-event-type" value="">
+      <button type="submit" class="w-full bg-gradient-to-r from-red-500 to-orange-500 text-white py-3 rounded-xl font-medium text-sm mt-2 hover:shadow-lg transition-all">Enregistrer</button>
+    </form>
+  </div>
+</div>
+
+<!-- ====== MODALE SETTINGS ====== -->
+<div id="modal-settings" class="fixed inset-0 z-[400] hidden">
+  <div class="modal-overlay absolute inset-0 bg-black/50" id="modal-settings-overlay"></div>
+  <div class="absolute bottom-0 left-0 right-0 md:left-1/2 md:-translate-x-1/2 md:bottom-auto md:top-1/2 md:-translate-y-1/2 md:max-w-md md:rounded-2xl bg-slate-800 border border-slate-700 rounded-t-3xl p-6 slide-up max-h-[90%] overflow-y-auto">
+    <h3 class="text-base font-bold text-slate-200 mb-5">⚙️ Paramètres</h3>
+    <div class="space-y-5 divide-y divide-slate-700">
+      <div class="pb-5">
+        <h4 class="text-sm font-semibold text-indigo-300 mb-3">👤 Compte</h4>
+        <input id="user-name" type="text" placeholder="Ton prénom" class="input-field text-sm">
+      </div>
+      <div class="pt-5 pb-5">
+        <h4 class="text-sm font-semibold text-indigo-300 mb-3">🎨 Apparence</h4>
+        <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" id="toggle-dark" checked class="w-4 h-4 accent-indigo-500"><span class="text-sm text-slate-300">Mode sombre</span></label>
+      </div>
+      <div class="pt-5 pb-5">
+        <h4 class="text-sm font-semibold text-indigo-300 mb-3">🔔 Notifications</h4>
+        <label class="flex items-center gap-3 mb-2 cursor-pointer"><input type="checkbox" id="notif-tasks" checked class="w-4 h-4 accent-indigo-500"><span class="text-sm text-slate-300">Alertes tâches</span></label>
+        <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" id="notif-events" checked class="w-4 h-4 accent-indigo-500"><span class="text-sm text-slate-300">Événements</span></label>
+      </div>
+      <div class="pt-5">
+        <h4 class="text-sm font-semibold text-indigo-300 mb-3">💾 Données</h4>
+        <button id="btn-export" class="w-full p-2.5 text-sm bg-green-500/15 text-green-400 border border-green-600/50 rounded-xl hover:bg-green-500/25 transition-all mb-2">📥 Exporter JSON</button>
+        <button id="btn-clear-data" class="w-full p-2.5 text-sm bg-red-500/15 text-red-400 border border-red-600/50 rounded-xl hover:bg-red-500/25 transition-all">🗑️ Effacer tout</button>
+      </div>
+    </div>
+    <p class="text-xs text-slate-500 text-center mt-6">Productiv Pro Ultra v5.2</p>
+  </div>
+</div>
+
+<!-- Notif banner -->
+<div id="notif-banner" class="fixed top-20 left-1/2 -translate-x-1/2 z-[500] hidden glass border border-amber-500/50 rounded-xl px-4 py-3 flex items-center gap-3 shadow-xl">
+  <span class="text-amber-400">🔔</span>
+  <span class="text-xs text-slate-300">Autoriser les notifications?</span>
+  <button id="btn-allow-notif" class="text-xs px-3 py-1 bg-amber-500 text-white rounded-lg">Oui</button>
+  <button id="btn-deny-notif" class="text-xs px-3 py-1 glass border border-slate-600 text-slate-400 rounded-lg">Non</button>
+</div>
+
+<!-- Toast container -->
+<div id="toast-root"></div>
+
+<script>
+/* ================================================================
+   ÉTAT GLOBAL
+================================================================ */
+let allData = [];
+let currentTab = 'home';
+let currentFormType = '';
+let selectedPriority = 'medium';
+let currentDayOffset = 0;
+let taskFilter = 'all';
+let isDark = true;
+let userObjective = null;
+let aiContextHistory = [];
+let aiMode = 'chat';
+let isLecture = false;
+let searchTypeFilter = 'all';
+let earnedBadges = JSON.parse(localStorage.getItem('earned_badges') || '[]');
+let studyStart = null;
+let studyIv = null;
+let studySecs = parseInt(localStorage.getItem('study_sec') || '0');
+let studyHist = JSON.parse(localStorage.getItem('study_hist') || '[]');
+let customAccent = localStorage.getItem('custom_accent') || '#6366f1';
+let calSpecials = JSON.parse(localStorage.getItem('cal_specials') || '[]');
+let sidebarExpanded = false;
+let chartSubj = null, chartWeek = null, chartStudy = null;
+
+// FAB double-click detection
+let fabClicks = 0;
+let fabTimer = null;
+
+/* ================================================================
+   INIT
+================================================================ */
+function init() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('productiv_user') || '{}');
+    const el = document.getElementById('user-name');
+    if (el) el.value = saved.name || '';
+    userObjective = parseFloat(localStorage.getItem('user_objective')) || null;
+  } catch(e) {}
+  isDark = localStorage.getItem('theme') !== 'light';
+  if (!isDark) document.body.classList.add('light-mode');
+  applyAccent(customAccent);
+  updateClock();
+  setInterval(updateClock, 1000);
+  buildDaySelector();
+  buildSchedule();
+  requestNotifPermission();
+}
+
+function updateClock() {
+  const now = new Date();
+  const d = document.getElementById('date-display');
+  const t = document.getElementById('time-display');
+  if (d) d.textContent = now.toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long' });
+  if (t) t.textContent = now.toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' });
+}
+
+function applyAccent(c) {
+  document.documentElement.style.setProperty('--accent', c);
+  document.documentElement.style.setProperty('--accent2', c);
+}
+
+/* ================================================================
+   DB (SDK ou localStorage)
+================================================================ */
+const localDB = {
+  get() { return JSON.parse(localStorage.getItem('pdata') || '[]'); },
+  save(d) { localStorage.setItem('pdata', JSON.stringify(d)); },
+  create(r) {
+    const data = this.get();
+    r.__backendId = 'l_' + Date.now() + '_' + Math.random().toString(36).substr(2,6);
+    data.push(r); this.save(data); allData = data; refreshAll();
+    return { isOk: true };
+  },
+  update(r) {
+    const data = this.get();
+    const i = data.findIndex(d => d.__backendId === r.__backendId);
+    if (i >= 0) data[i] = r;
+    this.save(data); allData = data; refreshAll();
+    return { isOk: true };
+  },
+  delete(r) {
+    const data = this.get().filter(d => d.__backendId !== r.__backendId);
+    this.save(data); allData = data; refreshAll();
+    return { isOk: true };
+  }
+};
+const db = {
+  create: async (r) => window.dataSdk ? window.dataSdk.create(r) : localDB.create(r),
+  update: async (r) => window.dataSdk ? window.dataSdk.update(r) : localDB.update(r),
+  delete: async (r) => window.dataSdk ? window.dataSdk.delete(r) : localDB.delete(r),
+};
+const dataHandler = {
+  onDataChanged(data) { allData = data; refreshAll(); lucide.createIcons(); }
+};
+(async () => {
+  if (window.dataSdk) {
+    const res = await window.dataSdk.init(dataHandler);
+    if (!res.isOk) { allData = localDB.get(); refreshAll(); }
+  } else { allData = localDB.get(); refreshAll(); }
+})();
+
+function refreshAll() {
+  renderHome(); renderTasks(); renderGrades(); renderAverage();
+  buildSchedule(); renderHomework(); renderHabits(); renderProjects();
+  renderAnalytics(); checkBadges();
+  lucide.createIcons();
+}
+
+/* ================================================================
+   NAVIGATION
+================================================================ */
+function goTo(nav) {
+  if (!nav || nav.endsWith('-action')) return;
+  currentTab = nav;
+  document.querySelectorAll('.tab-content').forEach(s => s.classList.add('hidden'));
+  const sec = document.getElementById('tab-' + nav);
+  if (sec) sec.classList.remove('hidden');
+  // Desktop sidebar active
+  document.querySelectorAll('.nav-item[data-nav]').forEach(b => {
+    b.classList.toggle('active', b.dataset.nav === nav);
+  });
+  // More popup items
+  document.querySelectorAll('.more-item[data-nav]').forEach(b => {
+    b.classList.toggle('active', b.dataset.nav === nav);
+  });
+  // Mobile nav
+  document.querySelectorAll('.mob-nav-btn[data-nav]').forEach(b => {
+    b.classList.toggle('active', b.dataset.nav === nav);
+  });
+  // Close popups
+  document.getElementById('more-popup').classList.remove('open');
+  document.getElementById('mob-more-sheet').classList.add('hidden');
+  // Lazy charts
+  if (nav === 'analytics') setTimeout(renderAnalyticsCharts, 150);
+  if (nav === 'average') setTimeout(renderAverageChart, 150);
+  if (nav === 'templates') renderTemplates();
+}
+
+// Desktop nav items
+document.querySelectorAll('.nav-item[data-nav]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const nav = btn.dataset.nav;
+    if (nav === 'search-action') { openSearch(); return; }
+    if (nav === 'lecture-action') { toggleLecture(); return; }
+    goTo(nav);
+  });
+});
+
+// More popup items (desktop)
+document.querySelectorAll('.more-item[data-nav]').forEach(item => {
+  item.addEventListener('click', () => goTo(item.dataset.nav));
+});
+
+// More button toggle
+document.getElementById('btn-more').addEventListener('click', (e) => {
+  e.stopPropagation();
+  document.getElementById('more-popup').classList.toggle('open');
+});
+document.addEventListener('click', () => {
+  document.getElementById('more-popup').classList.remove('open');
+});
+
+// Sidebar toggle expand/collapse
+const sidebar = document.getElementById('sidebar');
+const sidebarToggle = document.getElementById('sidebar-toggle');
+sidebarToggle.addEventListener('click', () => {
+  sidebarExpanded = !sidebarExpanded;
+  sidebar.classList.toggle('expanded', sidebarExpanded);
+  sidebarToggle.textContent = sidebarExpanded ? '‹' : '›';
+  // Move toggle button
+  if (sidebarExpanded) {
+    sidebarToggle.style.left = 'calc(var(--sidebar-expanded-w) - 10px)';
+  } else {
+    sidebarToggle.style.left = 'calc(var(--sidebar-w) - 10px)';
+  }
+});
+
+// Theme
+document.getElementById('btn-theme-nav').addEventListener('click', toggleTheme);
+document.getElementById('toggle-dark').addEventListener('change', (e) => {
+  isDark = e.target.checked;
+  document.body.classList.toggle('light-mode', !isDark);
+  localStorage.setItem('theme', isDark ? 'dark' : 'light');
+});
+function toggleTheme() {
+  isDark = !isDark;
+  document.body.classList.toggle('light-mode', !isDark);
+  localStorage.setItem('theme', isDark ? 'dark' : 'light');
+  document.getElementById('toggle-dark').checked = isDark;
+}
+
+// Settings
+document.getElementById('btn-settings-nav').addEventListener('click', () => document.getElementById('modal-settings').classList.remove('hidden'));
+
+// Mobile nav
+document.querySelectorAll('.mob-nav-btn[data-nav]').forEach(btn => {
+  btn.addEventListener('click', () => goTo(btn.dataset.nav));
+});
+document.getElementById('mob-more-btn').addEventListener('click', () => {
+  document.getElementById('mob-more-sheet').classList.remove('hidden');
+});
+document.getElementById('mob-more-overlay').addEventListener('click', () => {
+  document.getElementById('mob-more-sheet').classList.add('hidden');
+});
+document.querySelectorAll('.mob-more-item[data-nav]').forEach(btn => {
+  btn.addEventListener('click', () => goTo(btn.dataset.nav));
+});
+document.getElementById('mob-settings-btn').addEventListener('click', () => {
+  document.getElementById('mob-more-sheet').classList.add('hidden');
+  document.getElementById('modal-settings').classList.remove('hidden');
+});
+
+/* ================================================================
+   FAB — simple clic = contextuel / double clic = tout créer
+================================================================ */
+document.getElementById('fab-add').addEventListener('click', () => {
+  fabClicks++;
+  if (fabClicks === 1) {
+    fabTimer = setTimeout(() => {
+      fabClicks = 0;
+      openContextForm();
+    }, 300);
+  } else {
+    clearTimeout(fabTimer);
+    fabClicks = 0;
+    const fab = document.getElementById('fab-add');
+    fab.classList.add('ripple');
+    setTimeout(() => fab.classList.remove('ripple'), 300);
+    openAllModal();
+  }
+});
+
+function openAllModal() {
+  document.getElementById('modal-add').classList.remove('hidden');
+}
+
+function openContextForm() {
+  const cfg = {
+    home:      null,
+    tasks:     { type:'task',     title:'✅ Nouvelle tâche',     date:true,  time:false, prio:true },
+    grades:    'grade',
+    average:   null,
+    schedule:  { type:'event',    title:'📅 Nouvel événement',   date:true,  time:true,  prio:false },
+    homework:  { type:'homework', title:'📋 Nouveau devoir',     date:true,  time:false, prio:false },
+    habits:    { type:'habit',    title:'🔥 Nouvelle habitude',  date:false, time:false, prio:false },
+    projects:  { type:'project',  title:'📁 Nouveau projet',     date:false, time:false, prio:false },
+  };
+  const c = cfg[currentTab];
+  if (!c) { openAllModal(); return; }
+  if (c === 'grade') {
+    document.getElementById('grade-date').value = gds(0);
+    document.getElementById('modal-grade-form').classList.remove('hidden');
+    return;
+  }
+  currentFormType = c.type;
+  document.getElementById('input-type').value = c.type;
+  document.getElementById('form-title').textContent = c.title;
+  document.getElementById('date-field').classList.toggle('hidden', !c.date);
+  document.getElementById('time-fields').classList.toggle('hidden', !c.time);
+  document.getElementById('priority-field').classList.toggle('hidden', !c.prio);
+  document.getElementById('modal-form').classList.remove('hidden');
+}
+
+// Add-opt buttons in "all" modal
+document.querySelectorAll('.add-opt').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.getElementById('modal-add').classList.add('hidden');
+    const type = btn.dataset.type;
+    if (type === 'grade') {
+      document.getElementById('grade-date').value = gds(0);
+      document.getElementById('modal-grade-form').classList.remove('hidden');
+      return;
+    }
+    const cfg2 = {
+      task:     { title:'✅ Nouvelle tâche',     date:true,  time:false, prio:true },
+      event:    { title:'📅 Nouvel événement',   date:true,  time:true,  prio:false },
+      habit:    { title:'🔥 Nouvelle habitude',  date:false, time:false, prio:false },
+      project:  { title:'📁 Nouveau projet',     date:false, time:false, prio:false },
+      homework: { title:'📋 Nouveau devoir',     date:true,  time:false, prio:false },
+    };
+    const c = cfg2[type] || { title:'✨ Créer', date:false, time:false, prio:false };
+    currentFormType = type;
+    document.getElementById('input-type').value = type;
+    document.getElementById('form-title').textContent = c.title;
+    document.getElementById('date-field').classList.toggle('hidden', !c.date);
+    document.getElementById('time-fields').classList.toggle('hidden', !c.time);
+    document.getElementById('priority-field').classList.toggle('hidden', !c.prio);
+    document.getElementById('modal-form').classList.remove('hidden');
+  });
+});
+
+/* ================================================================
+   MODALES
+================================================================ */
+function closeAll() {
+  ['modal-add','modal-form','modal-settings','modal-grade-form','modal-objective','modal-search','modal-cal-event'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.add('hidden');
+  });
+}
+['modal-add-overlay','modal-form-overlay','modal-settings-overlay','modal-grade-form-overlay','modal-objective-overlay','modal-search-overlay','modal-cal-event-overlay'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('click', closeAll);
+});
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeAll(); });
+
+/* ================================================================
+   PRIORITÉ
+================================================================ */
+document.querySelectorAll('.priority-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.priority-btn').forEach(b => b.classList.remove('ring-2','ring-indigo-500'));
+    btn.classList.add('ring-2','ring-indigo-500');
+    selectedPriority = btn.dataset.priority;
+    document.getElementById('input-priority').value = btn.dataset.priority;
+  });
+});
+
+/* ================================================================
+   FILTRES TÂCHES
+================================================================ */
+document.querySelectorAll('[data-filter]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('[data-filter]').forEach(b => {
+      b.classList.remove('active','bg-indigo-500','text-white');
+      b.classList.add('glass','text-slate-300','border','border-slate-600');
+    });
+    btn.classList.add('active','bg-indigo-500','text-white');
+    btn.classList.remove('glass','text-slate-300','border','border-slate-600');
+    taskFilter = btn.dataset.filter;
+    renderTasks();
+  });
+});
+
+/* ================================================================
+   FORM SUBMIT
+================================================================ */
+document.getElementById('create-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const title = document.getElementById('input-title').value.trim();
+  if (!title) return;
+  const r = {
+    type: currentFormType, title,
+    description: document.getElementById('input-desc').value.trim(),
+    completed: false,
+    date: document.getElementById('input-due-date').value || gds(0),
+    time_start: document.getElementById('input-time-start').value || '',
+    time_end: document.getElementById('input-time-end').value || '',
+    category: currentFormType, priority: selectedPriority,
+    streak_count: 0, last_completed: '', project_content: '',
+    created_at: new Date().toISOString(),
+    due_date: document.getElementById('input-due-date').value || '',
+    tags: document.getElementById('input-tags').value || ''
+  };
+  const sbtn = e.target.querySelector('button[type=submit]');
+  sbtn.textContent = '...'; sbtn.disabled = true;
+  const res = await db.create(r);
+  sbtn.textContent = 'Créer'; sbtn.disabled = false;
+  if (res.isOk) {
+    closeAll();
+    ['input-title','input-desc','input-tags'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+    toast('✨ Créé avec succès!');
+  }
+});
+
+/* ================================================================
+   TOAST
+================================================================ */
+function toast(msg) {
+  const t = document.createElement('div');
+  t.style.cssText = 'position:fixed;top:80px;left:50%;transform:translateX(-50%);background:rgba(30,41,59,0.95);border:1px solid rgba(100,116,139,0.3);color:#e2e8f0;font-size:13px;padding:10px 18px;border-radius:50px;z-index:9999;white-space:nowrap;backdrop-filter:blur(12px);animation:fadeIn 0.3s ease-out;pointer-events:none;';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity 0.3s'; setTimeout(() => t.remove(), 300); }, 2200);
+}
+
+/* ================================================================
+   NOTIFICATIONS
+================================================================ */
+let notifEnabled = localStorage.getItem('notif_en') === '1';
+function requestNotifPermission() {
+  if ('Notification' in window && Notification.permission === 'default') {
+    setTimeout(() => document.getElementById('notif-banner').classList.remove('hidden'), 2000);
+  }
+}
+document.getElementById('btn-allow-notif').addEventListener('click', async () => {
+  notifEnabled = (await Notification.requestPermission()) === 'granted';
+  localStorage.setItem('notif_en', notifEnabled ? '1' : '0');
+  document.getElementById('notif-banner').classList.add('hidden');
+  if (notifEnabled) toast('🔔 Notifications activées!');
+});
+document.getElementById('btn-deny-notif').addEventListener('click', () => document.getElementById('notif-banner').classList.add('hidden'));
+setInterval(() => {
+  const today = gds(0);
+  allData.filter(d => d.type==='task' && !d.completed && d.due_date===today).forEach(t => {
+    const k = 'n_' + t.__backendId;
+    if (!localStorage.getItem(k) && notifEnabled && Notification.permission==='granted') {
+      new Notification('📋 Tâche aujourd\'hui', { body: t.title });
+      localStorage.setItem(k, '1');
+    }
+  });
+}, 60000);
+
+/* ================================================================
+   DATES
+================================================================ */
+function gds(o=0) { const d=new Date(); d.setDate(d.getDate()+o); return d.toISOString().split('T')[0]; }
+function fmtDate(s) { if(!s) return '—'; return new Date(s+'T00:00:00').toLocaleDateString('fr-FR',{weekday:'short',day:'numeric',month:'short'}); }
+function fmtLong(s) { if(!s) return '—'; return new Date(s+'T00:00:00').toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'}); }
+
+/* ================================================================
+   BADGES (sans XP — juste visuels)
+================================================================ */
+const BADGES = [
+  { id:'t1',  e:'✅', l:'1ère tâche accomplie', fn:(d)=>d.filter(x=>x.type==='task'&&x.completed).length>=1 },
+  { id:'t10', e:'🏅', l:'10 tâches complétées', fn:(d)=>d.filter(x=>x.type==='task'&&x.completed).length>=10 },
+  { id:'t50', e:'🥇', l:'50 tâches complétées', fn:(d)=>d.filter(x=>x.type==='task'&&x.completed).length>=50 },
+  { id:'g20', e:'⭐', l:'Note parfaite 20/20',  fn:(d)=>d.some(x=>x.type==='grade'&&x.grade===20) },
+  { id:'a15', e:'🌟', l:'Moyenne 15+',          fn:(d,a)=>a>=15 },
+  { id:'a18', e:'🏆', l:'Moyenne 18+',          fn:(d,a)=>a>=18 },
+  { id:'s7',  e:'🔥', l:'Streak 7 jours',       fn:(d)=>d.some(x=>x.type==='habit'&&(x.streak_count||0)>=7) },
+  { id:'n5',  e:'📚', l:'5 notes saisies',      fn:(d)=>d.filter(x=>x.type==='grade').length>=5 },
+];
+function computeAvg() {
+  const g=allData.filter(d=>d.type==='grade'&&d.grade);
+  let tw=0,tc=0; g.forEach(x=>{const w=x.weight||1;tw+=x.grade*w;tc+=w;});
+  return tc>0?tw/tc:0;
+}
+function checkBadges() {
+  const avg=computeAvg();
+  BADGES.forEach(b=>{
+    if(!earnedBadges.includes(b.id)&&b.fn(allData,avg)){
+      earnedBadges.push(b.id);
+      localStorage.setItem('earned_badges',JSON.stringify(earnedBadges));
+      toast(`🏆 Badge: ${b.e} ${b.l}!`);
+    }
+  });
+  renderBadges();
+}
+function renderBadges() {
+  const c=document.getElementById('badges-display'); if(!c) return;
+  if(!earnedBadges.length){c.innerHTML='<p class="text-xs text-slate-500">Complète des tâches pour gagner des badges!</p>';return;}
+  c.innerHTML=BADGES.filter(b=>earnedBadges.includes(b.id)).map(b=>`<div class="badge-pop flex items-center gap-2 px-3 py-1.5 glass rounded-lg border border-amber-500/30 badge-glow"><span>${b.e}</span><span class="text-xs text-amber-300 font-medium hidden md:inline">${b.l}</span></div>`).join('');
+}
+
+/* ================================================================
+   PLANNING
+================================================================ */
+function buildDaySelector() {
+  const sel=document.getElementById('day-selector'); if(!sel) return;
+  sel.innerHTML='';
+  for(let i=-2;i<=5;i++){
+    const d=new Date(); d.setDate(d.getDate()+i);
+    const ds=d.toISOString().split('T')[0];
+    const label=i===0?'Auj.':i===1?'Dem.':d.toLocaleDateString('fr-FR',{weekday:'short',day:'numeric'});
+    const sp=calSpecials.find(s=>s.date===ds||(s.start<=ds&&ds<=(s.end||s.start)));
+    let extra='';
+    if(sp?.type==='exam') extra='border-red-500 text-red-300';
+    else if(sp?.type==='vacation') extra='border-green-500 text-green-300';
+    const chip=document.createElement('button');
+    chip.className=`px-3 py-1.5 text-xs rounded-full font-medium whitespace-nowrap transition-all ${i===currentDayOffset?'bg-indigo-500 text-white':'glass text-slate-300 border border-slate-600 hover:border-indigo-400 '+extra}`;
+    chip.textContent=label;
+    chip.addEventListener('click',()=>{currentDayOffset=i;buildDaySelector();buildSchedule();});
+    sel.appendChild(chip);
+  }
+}
+function buildSchedule() {
+  const grid=document.getElementById('schedule-grid'); if(!grid) return;
+  grid.innerHTML='';
+  const ds=gds(currentDayOffset);
+  const el=document.getElementById('current-day-display'); if(el) el.textContent=fmtLong(ds);
+  const sp=calSpecials.find(s=>s.date===ds||(s.start<=ds&&ds<=(s.end||s.start)));
+  if(sp){
+    const b=document.createElement('div');
+    b.className=`p-2.5 rounded-lg mb-2 text-xs font-semibold ${sp.type==='exam'?'bg-red-500/20 text-red-300 border border-red-500/30':'bg-green-500/20 text-green-300 border border-green-500/30'}`;
+    b.textContent=`${sp.type==='exam'?'🔴 EXAMEN: ':'🟢 VACANCES: '}${sp.name}`;
+    grid.appendChild(b);
+  }
+  for(let h=6;h<=22;h++){
+    const slot=document.createElement('div');
+    slot.className='schedule-slot flex items-center gap-2 py-1.5 px-3';
+    const evts=allData.filter(d=>d.type==='event'&&d.date===ds&&d.time_start&&parseInt(d.time_start.split(':')[0])===h);
+    slot.innerHTML=`<span class="text-xs text-slate-600 w-10 shrink-0 font-mono">${h.toString().padStart(2,'0')}:00</span><div class="flex-1 flex gap-1 flex-wrap min-h-5">${evts.map(e=>`<span class="text-xs bg-indigo-400/20 text-indigo-300 px-2 py-0.5 rounded-full">${e.title}</span>`).join('')||''}</div>`;
+    grid.appendChild(slot);
+  }
+}
+document.getElementById('btn-prev-day').addEventListener('click',()=>{currentDayOffset--;buildDaySelector();buildSchedule();});
+document.getElementById('btn-next-day').addEventListener('click',()=>{currentDayOffset++;buildDaySelector();buildSchedule();});
+document.getElementById('btn-add-exam-day').addEventListener('click',()=>{
+  document.getElementById('cal-event-title').textContent='🔴 Jour d\'examen';
+  document.getElementById('cal-event-type').value='exam';
+  document.getElementById('cal-start').value=gds(currentDayOffset);
+  document.getElementById('modal-cal-event').classList.remove('hidden');
+});
+document.getElementById('btn-add-vacation').addEventListener('click',()=>{
+  document.getElementById('cal-event-title').textContent='🟢 Vacances';
+  document.getElementById('cal-event-type').value='vacation';
+  document.getElementById('cal-start').value=gds(currentDayOffset);
+  document.getElementById('modal-cal-event').classList.remove('hidden');
+});
+document.getElementById('cal-event-form').addEventListener('submit',(e)=>{
+  e.preventDefault();
+  calSpecials.push({name:document.getElementById('cal-event-name').value,type:document.getElementById('cal-event-type').value,start:document.getElementById('cal-start').value,end:document.getElementById('cal-end').value||document.getElementById('cal-start').value,date:document.getElementById('cal-start').value});
+  localStorage.setItem('cal_specials',JSON.stringify(calSpecials));
+  closeAll();buildDaySelector();buildSchedule();
+  toast(document.getElementById('cal-event-type').value==='exam'?'🔴 Examen ajouté!':'🟢 Vacances ajoutées!');
+});
+
+/* ================================================================
+   HOME
+================================================================ */
+function renderHome() {
+  const tasks=allData.filter(d=>d.type==='task');
+  const done=tasks.filter(d=>d.completed).length, tot=tasks.length;
+  const pct=tot===0?0:Math.round((done/tot)*100);
+  const circ=2*Math.PI*55;
+  const pc=document.getElementById('progress-circle');
+  if(pc){pc.style.strokeDasharray=circ;pc.style.strokeDashoffset=circ-(pct/100)*circ;}
+  setEl('progress-percent',pct+'%'); setEl('progress-status',`${done} de ${tot} tâches`);
+  setEl('stat-tasks',tot); setEl('stat-done',done);
+  const avg=computeAvg(); setEl('home-avg',avg>0?avg.toFixed(2):'--');
+  const today=gds(0);
+  const evts=allData.filter(d=>d.type==='event'&&d.date===today).sort((a,b)=>(a.time_start||'').localeCompare(b.time_start||''));
+  const he=document.getElementById('home-events');
+  if(he) he.innerHTML=evts.length?evts.map(e=>`<div class="flex items-center gap-3 p-3 glass rounded-xl border border-indigo-500/20"><div class="w-1.5 h-1.5 rounded-full bg-indigo-400"></div><div class="flex-1 min-w-0"><p class="text-xs font-medium text-slate-200 truncate">${e.title}</p><p class="text-xs text-slate-500">${e.time_start||'—'}</p></div></div>`).join(''):'<p class="text-xs text-slate-500 text-center py-3">Aucun événement</p>';
+  const up=allData.filter(d=>d.type==='task'&&!d.completed&&d.due_date&&d.due_date>today).sort((a,b)=>a.due_date.localeCompare(b.due_date)).slice(0,3);
+  const hu=document.getElementById('home-upcoming');
+  if(hu) hu.innerHTML=up.length?up.map(t=>`<div class="flex items-center gap-3 p-3 glass rounded-xl border border-amber-500/20"><span class="text-base">📌</span><div class="flex-1 min-w-0"><p class="text-xs font-medium text-slate-200 truncate">${t.title}</p><p class="text-xs text-slate-500">${fmtDate(t.due_date)}</p></div></div>`).join(''):'<p class="text-xs text-slate-500 text-center py-3">Aucune tâche</p>';
+  const tips=['💡 Travaille pendant tes heures de pointe','🎯 Définis des objectifs SMART','😴 Dors 7-8h par nuit','🌳 Prends du temps dehors','📚 Révise régulièrement','⚡ Une tâche à la fois','🎵 La musique booste la concentration','🧠 Pomodoro: 25min + 5min pause'];
+  setEl('daily-tip',tips[new Date().getDay()%tips.length]);
+}
+function setEl(id,val){const e=document.getElementById(id);if(e)e.textContent=val;}
+
+/* ================================================================
+   TÂCHES
+================================================================ */
+function renderTasks() {
+  const today=gds(0);
+  let tasks=allData.filter(d=>d.type==='task');
+  if(taskFilter==='today') tasks=tasks.filter(d=>d.due_date===today);
+  else if(taskFilter==='overdue') tasks=tasks.filter(d=>d.due_date&&d.due_date<today&&!d.completed);
+  else if(taskFilter==='tomorrow') tasks=tasks.filter(d=>d.due_date===gds(1));
+  const list=document.getElementById('tasks-list');
+  const empty=document.getElementById('tasks-empty');
+  if(!list) return;
+  empty.classList.toggle('hidden',tasks.length>0);
+  setEl('tasks-count',`${tasks.length} tâche${tasks.length!==1?'s':''}`);
+  list.innerHTML='';
+  const pc={high:'bg-red-400',medium:'bg-amber-400',low:'bg-green-400'};
+  tasks.sort((a,b)=>{
+    if(a.completed!==b.completed) return a.completed?1:-1;
+    return (a.due_date||'').localeCompare(b.due_date||'');
+  }).forEach(task=>{
+    const over=task.due_date&&task.due_date<today&&!task.completed;
+    const tags=task.tags?task.tags.split(',').map(t=>t.trim()).filter(Boolean).map(t=>`<span class="text-xs px-1.5 py-0.5 bg-indigo-500/20 text-indigo-300 rounded-md">${t}</span>`).join(''):'';
+    const el=document.createElement('div');
+    el.className='card-hover glass rounded-xl p-3.5 border border-slate-700/60 flex items-center gap-3 fade-in hover:border-indigo-500/50 transition-all';
+    el.innerHTML=`
+      <button class="chk w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${task.completed?'bg-green-500 border-green-500':'border-slate-500 hover:border-indigo-400'}" data-id="${task.__backendId}">
+        ${task.completed?'<i data-lucide="check" style="width:11px;height:11px;color:white;"></i>':''}
+      </button>
+      <div class="flex-1 min-w-0">
+        <p class="text-sm font-medium ${task.completed?'line-through text-slate-500':'text-slate-200'} truncate">${task.title}</p>
+        <div class="flex items-center gap-2 mt-0.5 flex-wrap">
+          <p class="text-xs ${over?'text-red-400':'text-slate-500'}">${task.due_date?fmtDate(task.due_date):'Sans date'}</p>
+          ${tags}
+        </div>
+      </div>
+      <div class="w-2 h-2 rounded-full ${pc[task.priority]||'bg-slate-600'} shrink-0"></div>
+      <button class="del text-slate-600 hover:text-red-400 transition-colors shrink-0" data-id="${task.__backendId}"><i data-lucide="trash-2" style="width:14px;height:14px;"></i></button>`;
+    list.appendChild(el);
+  });
+  list.querySelectorAll('.chk').forEach(btn=>{
+    btn.addEventListener('click',async()=>{
+      const item=allData.find(d=>d.__backendId===btn.dataset.id);
+      if(item){item.completed=!item.completed;if(item.completed)toast('✅ Terminé!');await db.update(item);}
+    });
+  });
+  list.querySelectorAll('.del').forEach(btn=>{
+    btn.addEventListener('click',async()=>{const i=allData.find(d=>d.__backendId===btn.dataset.id);if(i)await db.delete(i);});
+  });
+  lucide.createIcons();
+}
+
+/* ================================================================
+   NOTES
+================================================================ */
+function renderGrades() {
+  const grades=allData.filter(d=>d.type==='grade'&&d.grade!=null);
+  const list=document.getElementById('grades-list');
+  const empty=document.getElementById('grades-empty');
+  if(!list) return;
+  if(!grades.length){empty.classList.remove('hidden');list.innerHTML='';return;}
+  empty.classList.add('hidden');
+  list.innerHTML=grades.slice().sort((a,b)=>(b.note_date||'').localeCompare(a.note_date||'')).map(g=>{
+    const col=g.grade>=15?'text-green-400':g.grade>=12?'text-blue-400':g.grade>=10?'text-amber-400':'text-red-400';
+    return `<div class="flex items-center justify-between p-3 glass rounded-xl border border-slate-700/60 fade-in group hover:border-indigo-500/50 transition-all">
+      <div class="flex-1"><p class="text-sm font-medium text-slate-200">${g.subject} <span class="text-xs text-slate-500">×${g.weight||1}</span></p><p class="text-xs text-slate-500 mt-0.5">${fmtDate(g.note_date)}</p></div>
+      <div class="flex items-center gap-3">
+        <p class="text-xl font-bold ${col}">${g.grade}<span class="text-xs text-slate-500">/20</span></p>
+        <button class="delg text-slate-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all" data-id="${g.__backendId}"><i data-lucide="trash-2" style="width:14px;height:14px;"></i></button>
+      </div>
+    </div>`;
+  }).join('');
+  list.querySelectorAll('.delg').forEach(btn=>{
+    btn.addEventListener('click',async()=>{const i=allData.find(d=>d.__backendId===btn.dataset.id);if(i)await db.delete(i);});
+  });
+  lucide.createIcons();
+  if(userObjective){
+    const avg=computeAvg(),gap=userObjective-avg;
+    setEl('objective-display',userObjective.toFixed(2));
+    const os=document.getElementById('objective-status');
+    if(os) os.innerHTML=gap>0?`<span class="text-amber-400">+${gap.toFixed(2)} nécessaire</span>`:`<span class="text-green-400">🎉 Objectif atteint!</span>`;
+    const op=document.getElementById('objective-progress');
+    if(op) op.style.width=Math.min(100,(avg/userObjective)*100)+'%';
+  }
+}
+document.getElementById('btn-set-objective').addEventListener('click',()=>{
+  if(userObjective) document.getElementById('objective-value').value=userObjective;
+  document.getElementById('modal-objective').classList.remove('hidden');
+});
+document.getElementById('objective-form').addEventListener('submit',(e)=>{
+  e.preventDefault();
+  userObjective=parseFloat(document.getElementById('objective-value').value);
+  if(userObjective>=0&&userObjective<=20){localStorage.setItem('user_objective',userObjective);closeAll();toast('🎯 Objectif défini!');renderGrades();}
+});
+document.getElementById('grade-form').addEventListener('submit',async(e)=>{
+  e.preventDefault();
+  const subject=document.getElementById('grade-subject').value;
+  const grade=parseFloat(document.getElementById('grade-value').value);
+  if(!subject||isNaN(grade)) return;
+  const r={type:'grade',subject,grade,weight:parseFloat(document.getElementById('grade-weight').value)||1,note_date:document.getElementById('grade-date').value||gds(0),title:`${subject}-${grade}`,description:'',completed:false,date:gds(0),time_start:'',time_end:'',category:'grade',priority:'medium',streak_count:0,last_completed:'',project_content:'',created_at:new Date().toISOString(),due_date:'',tags:''};
+  const res=await db.create(r);
+  if(res.isOk){closeAll();document.getElementById('grade-form').reset();toast('📝 Note enregistrée!');}
+});
+document.getElementById('btn-import-grades').addEventListener('click',()=>{
+  const inp=document.createElement('input');inp.type='file';inp.accept='application/json';
+  inp.addEventListener('change',async(e)=>{
+    const file=e.target.files[0];if(!file) return;
+    try{const text=await file.text();const items=JSON.parse(text);let cnt=0;
+    if(Array.isArray(items)){for(const item of items){if(item.grade&&item.subject){const r={type:'grade',subject:item.subject,grade:parseFloat(item.grade)||0,weight:parseFloat(item.weight)||1,note_date:item.note_date||gds(0),title:`${item.subject}-${item.grade}`,description:'',completed:false,date:gds(0),time_start:'',time_end:'',category:'grade',priority:'medium',streak_count:0,last_completed:'',project_content:'',created_at:new Date().toISOString(),due_date:'',tags:''};const res=await db.create(r);if(res.isOk)cnt++;}}
+    toast(`✅ ${cnt} note${cnt>1?'s':''} importée${cnt>1?'s':''}!`);}}catch{toast('❌ Erreur importation');}
+  });inp.click();
+});
+document.getElementById('btn-export-pdf').addEventListener('click',()=>{
+  const grades=allData.filter(d=>d.type==='grade'&&d.grade!=null);
+  const tasks=allData.filter(d=>d.type==='task');
+  const avg=computeAvg();
+  const html=`<html><head><title>Rapport Productiv Pro</title><style>body{font-family:Arial,sans-serif;max-width:800px;margin:0 auto;padding:20px;}h1{color:#4f46e5;border-bottom:2px solid #4f46e5;padding-bottom:10px;}h2{color:#7c3aed;margin-top:25px;}table{width:100%;border-collapse:collapse;margin-top:8px;}th,td{border:1px solid #e2e8f0;padding:8px 12px;font-size:13px;}th{background:#f1f5f9;font-weight:600;}.avg{font-size:22px;font-weight:bold;color:#4f46e5;}.done{text-decoration:line-through;color:#94a3b8;}</style></head><body><h1>📊 Rapport Productiv Pro</h1><p>${new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</p><h2>🎯 Moyennes</h2><div class="avg">Moyenne: ${avg>0?avg.toFixed(2):'—'}/20</div><table><tr><th>Matière</th><th>Note</th><th>Coeff</th><th>Date</th></tr>${grades.map(g=>`<tr><td>${g.subject}</td><td>${g.grade}/20</td><td>${g.weight||1}</td><td>${fmtDate(g.note_date)}</td></tr>`).join('')}</table><h2>✅ Tâches</h2><table><tr><th>Titre</th><th>Date</th><th>Priorité</th><th>Statut</th></tr>${tasks.map(t=>`<tr><td class="${t.completed?'done':''}">${t.title}</td><td>${fmtDate(t.due_date)}</td><td>${t.priority||'—'}</td><td>${t.completed?'✅':'⏳'}</td></tr>`).join('')}</table></body></html>`;
+  const w=window.open('','_blank');w.document.write(html);w.document.close();setTimeout(()=>w.print(),500);
+});
+
+/* ================================================================
+   MOYENNES
+================================================================ */
+function renderAverage() {
+  const grades=allData.filter(d=>d.type==='grade'&&d.grade!=null);
+  const subj={};grades.forEach(g=>{if(!subj[g.subject])subj[g.subject]=[];subj[g.subject].push(g);});
+  let tw=0,tc=0;const sdata=[];
+  Object.entries(subj).forEach(([s,gl])=>{let sw=0,sc=0;gl.forEach(g=>{const w=g.weight||1;sw+=g.grade*w;sc+=w;});sdata.push({s,avg:sc>0?sw/sc:0,n:gl.length});tw+=sw;tc+=sc;});
+  const gen=tc>0?(tw/tc).toFixed(2):'--';
+  setEl('avg-general',gen);setEl('avg-subjects-count',Object.keys(subj).length);
+  const gbs=document.getElementById('grades-by-subject');
+  if(gbs) gbs.innerHTML=sdata.length?sdata.sort((a,b)=>b.avg-a.avg).map(s=>{
+    const col=s.avg>=15?'text-green-400':s.avg>=12?'text-blue-400':s.avg>=10?'text-amber-400':'text-red-400';
+    const pct=Math.min(100,(s.avg/20)*100);
+    return `<div class="p-3 glass rounded-xl border border-slate-700/60"><div class="flex items-center justify-between mb-1.5"><p class="text-sm font-medium text-slate-200">${s.s}</p><p class="font-bold ${col}">${s.avg.toFixed(2)}<span class="text-xs text-slate-500">/20</span></p></div><div class="w-full h-1.5 bg-slate-700 rounded-full overflow-hidden"><div class="h-full rounded-full transition-all" style="width:${pct}%;background:${s.avg>=15?'#10b981':s.avg>=12?'#3b82f6':s.avg>=10?'#f59e0b':'#ef4444'};"></div></div><p class="text-xs text-slate-500 mt-1">${s.n} note${s.n>1?'s':''}</p></div>`;
+  }).join(''):'<p class="text-xs text-slate-500 text-center py-4">Aucune note</p>';
+}
+function renderAverageChart() {
+  const grades=allData.filter(d=>d.type==='grade'&&d.grade!=null);
+  const subj={};grades.forEach(g=>{if(!subj[g.subject])subj[g.subject]=[];subj[g.subject].push(g);});
+  const labels=Object.keys(subj);
+  const avgs=labels.map(s=>{const gl=subj[s];let sw=0,sc=0;gl.forEach(g=>{const w=g.weight||1;sw+=g.grade*w;sc+=w;});return sc>0?parseFloat((sw/sc).toFixed(2)):0;});
+  const ctx=document.getElementById('chart-subjects');if(!ctx) return;
+  if(chartSubj) chartSubj.destroy();
+  chartSubj=new Chart(ctx,{type:'bar',data:{labels,datasets:[{data:avgs,backgroundColor:avgs.map(a=>a>=15?'rgba(16,185,129,0.6)':a>=12?'rgba(59,130,246,0.6)':a>=10?'rgba(245,158,11,0.6)':'rgba(239,68,68,0.6)'),borderColor:avgs.map(a=>a>=15?'#10b981':a>=12?'#3b82f6':a>=10?'#f59e0b':'#ef4444'),borderWidth:2,borderRadius:6}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{min:0,max:20,ticks:{color:'#64748b'},grid:{color:'rgba(30,41,59,0.8)'}},x:{ticks:{color:'#64748b'},grid:{display:false}}}}});
+}
+
+/* ================================================================
+   ANALYTICS
+================================================================ */
+function renderAnalytics() {
+  const done=allData.filter(d=>d.type==='task'&&d.completed).length;
+  const maxStr=Math.max(0,...allData.filter(d=>d.type==='habit').map(h=>h.streak_count||0));
+  const tot=allData.filter(d=>d.type==='task').length;
+  const score=tot>0?Math.round((done/tot)*100):0;
+  setEl('analytics-tasks-done',done);setEl('analytics-streak',maxStr+'🔥');setEl('analytics-score',score+'%');
+  const lb=document.getElementById('leaderboard');
+  if(lb){
+    let uname='Moi';try{uname=JSON.parse(localStorage.getItem('productiv_user')||'{}').name||'Moi';}catch{}
+    const comp=[{n:uname,s:score},{n:'Alex',s:Math.max(0,score-5+Math.floor(Math.random()*10))},{n:'Sam',s:Math.max(0,score-15+Math.floor(Math.random()*10))}].sort((a,b)=>b.s-a.s);
+    lb.innerHTML=comp.map((c,i)=>`<div class="flex items-center gap-3 p-3 glass rounded-xl border border-slate-700/60"><span class="text-xl">${['🥇','🥈','🥉'][i]||'🏅'}</span><div class="flex-1"><p class="text-sm font-medium text-slate-200">${c.n}</p></div><span class="text-xs font-bold text-green-400">${c.s}% prod.</span></div>`).join('');
+  }
+}
+function renderAnalyticsCharts() {
+  renderAnalytics();
+  const ctxW=document.getElementById('chart-weekly-tasks');
+  if(ctxW){
+    if(chartWeek) chartWeek.destroy();
+    const days=[],counts=[];
+    for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const ds=d.toISOString().split('T')[0];days.push(d.toLocaleDateString('fr-FR',{weekday:'short'}));counts.push(allData.filter(t=>t.type==='task'&&t.completed&&t.created_at&&t.created_at.startsWith(ds)).length);}
+    chartWeek=new Chart(ctxW,{type:'line',data:{labels:days,datasets:[{data:counts,borderColor:'#6366f1',backgroundColor:'rgba(99,102,241,0.12)',fill:true,tension:0.4,pointBackgroundColor:'#6366f1',pointRadius:4,pointHoverRadius:6}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{min:0,ticks:{color:'#64748b'},grid:{color:'rgba(30,41,59,0.8)'}},x:{ticks:{color:'#64748b'},grid:{display:false}}}}});
+  }
+  const ctxS=document.getElementById('chart-study-subject');
+  if(ctxS){
+    if(chartStudy) chartStudy.destroy();
+    const g=allData.filter(d=>d.type==='grade'&&d.grade!=null);const s={};g.forEach(x=>{s[x.subject]=(s[x.subject]||0)+1;});
+    if(Object.keys(s).length>0) chartStudy=new Chart(ctxS,{type:'doughnut',data:{labels:Object.keys(s),datasets:[{data:Object.values(s),backgroundColor:['#6366f1','#8b5cf6','#d946ef','#10b981','#3b82f6','#f59e0b','#ef4444','#14b8a6'],borderWidth:2,borderColor:'rgba(10,14,39,0.8)'}]},options:{responsive:true,plugins:{legend:{position:'right',labels:{color:'#94a3b8',font:{size:11}}}}}});
+  }
+}
+
+/* ================================================================
+   DEVOIRS
+================================================================ */
+function renderHomework() {
+  const hw=allData.filter(d=>d.type==='homework');
+  const list=document.getElementById('homework-list');const empty=document.getElementById('homework-empty');
+  if(!list) return;
+  const hc=document.getElementById('homework-count');if(hc) hc.textContent=hw.length?`${hw.length} devoir${hw.length>1?'s':''}` :'';
+  empty.classList.toggle('hidden',hw.length>0);
+  list.innerHTML='';
+  hw.sort((a,b)=>(a.due_date||'').localeCompare(b.due_date||'')).forEach(h=>{
+    const el=document.createElement('div');el.className='card-hover glass rounded-xl p-4 border border-slate-700/60 fade-in hover:border-blue-500/50 transition-all';
+    el.innerHTML=`<div class="flex items-start justify-between gap-3"><div class="flex-1 min-w-0"><p class="text-sm font-semibold text-slate-200 truncate">${h.title}</p><p class="text-xs text-slate-500 mt-1">${h.description||'Aucune description'}</p><p class="text-xs text-amber-400 mt-1.5">📅 À rendre: ${fmtDate(h.due_date)}</p></div><button class="delh text-slate-600 hover:text-red-400 shrink-0" data-id="${h.__backendId}"><i data-lucide="trash-2" style="width:14px;height:14px;"></i></button></div>`;
+    list.appendChild(el);
+  });
+  list.querySelectorAll('.delh').forEach(btn=>{btn.addEventListener('click',async()=>{const i=allData.find(d=>d.__backendId===btn.dataset.id);if(i)await db.delete(i);});});
+  lucide.createIcons();
+}
+
+/* ================================================================
+   HABITUDES + TEMPS D'ÉTUDE
+================================================================ */
+function renderHabits() {
+  const habits=allData.filter(d=>d.type==='habit');
+  const list=document.getElementById('habits-list');if(!list) return;
+  document.getElementById('habits-empty').classList.toggle('hidden',habits.length>0);
+  const today=gds(0);
+  list.innerHTML='';
+  habits.forEach(h=>{
+    const done=h.last_completed===today;
+    const el=document.createElement('div');el.className='card-hover glass rounded-xl p-4 border border-slate-700/60 flex items-center gap-3 fade-in hover:border-amber-500/50 transition-all';
+    el.innerHTML=`<button class="hchk w-8 h-8 rounded-full flex items-center justify-center transition-all flex-shrink-0 ${done?'bg-gradient-to-r from-amber-500 to-orange-500':'glass border border-slate-600 hover:border-amber-400'}" data-id="${h.__backendId}">${done?'<i data-lucide="check" style="width:15px;height:15px;color:white;"></i>':'<i data-lucide="circle" style="width:15px;height:15px;color:#64748b;"></i>'}</button><div class="flex-1 min-w-0"><p class="text-sm font-medium text-slate-200">${h.title}</p><p class="text-xs text-slate-500">🔥 Série: ${h.streak_count||0} jour${(h.streak_count||0)>1?'s':''}</p></div><button class="delha text-slate-600 hover:text-red-400" data-id="${h.__backendId}"><i data-lucide="trash-2" style="width:14px;height:14px;"></i></button>`;
+    list.appendChild(el);
+  });
+  list.querySelectorAll('.hchk').forEach(btn=>{
+    btn.addEventListener('click',async()=>{
+      const item=allData.find(d=>d.__backendId===btn.dataset.id);if(!item) return;
+      const t=gds(0);
+      if(item.last_completed!==t){item.last_completed=t;item.streak_count=(item.streak_count||0)+1;toast(`🔥 Série: ${item.streak_count} jour${item.streak_count>1?'s':''}!`);}
+      else{item.last_completed='';item.streak_count=Math.max(0,(item.streak_count||0)-1);}
+      await db.update(item);
+    });
+  });
+  list.querySelectorAll('.delha').forEach(btn=>{btn.addEventListener('click',async()=>{const i=allData.find(d=>d.__backendId===btn.dataset.id);if(i)await db.delete(i);});});
+  lucide.createIcons();
+  renderStudyTime();
+}
+function renderStudyTime() {
+  const h=Math.floor(studySecs/3600),m=Math.floor((studySecs%3600)/60);
+  setEl('study-time-display',`${h}h ${m}m`);
+  const hist=document.getElementById('study-history');if(!hist) return;
+  const today=gds(0);const ses=studyHist.filter(s=>s.date===today);
+  hist.innerHTML=ses.length?ses.map(s=>`<p class="text-xs text-slate-400">📚 Session: ${s.duration} min</p>`).join(''):'<p class="text-xs text-slate-500">Aucune session aujourd\'hui</p>';
+}
+document.getElementById('btn-study-start').addEventListener('click',()=>{
+  if(studyStart) return;studyStart=Date.now();
+  document.getElementById('btn-study-start').disabled=true;document.getElementById('btn-study-stop').disabled=false;
+  studyIv=setInterval(()=>{studySecs++;renderStudyTime();},1000);toast('📚 Session démarrée!');
+});
+document.getElementById('btn-study-stop').addEventListener('click',()=>{
+  if(!studyStart) return;clearInterval(studyIv);
+  const dur=Math.round((Date.now()-studyStart)/60000);
+  studyHist.push({date:gds(0),duration:dur});
+  localStorage.setItem('study_hist',JSON.stringify(studyHist));localStorage.setItem('study_sec',studySecs);
+  studyStart=null;document.getElementById('btn-study-start').disabled=false;document.getElementById('btn-study-stop').disabled=true;
+  toast(`⏱️ Session: ${dur} min!`);renderStudyTime();
+});
+
+/* ================================================================
+   PROJETS
+================================================================ */
+function renderProjects() {
+  const projs=allData.filter(d=>d.type==='project');
+  const list=document.getElementById('projects-list');if(!list) return;
+  document.getElementById('projects-empty').classList.toggle('hidden',projs.length>0);
+  list.innerHTML='';
+  projs.forEach(p=>{
+    const el=document.createElement('div');el.className='card-hover glass rounded-xl p-4 border border-slate-700/60 fade-in hover:border-green-500/50 transition-all';
+    el.innerHTML=`<div class="flex items-center justify-between gap-3"><div class="flex-1 min-w-0"><p class="text-sm font-semibold text-slate-200 truncate">📁 ${p.title}</p><p class="text-xs text-slate-500 mt-1 line-clamp-2">${p.description||'Aucune description'}</p></div><button class="delp text-slate-600 hover:text-red-400 shrink-0" data-id="${p.__backendId}"><i data-lucide="trash-2" style="width:14px;height:14px;"></i></button></div>`;
+    list.appendChild(el);
+  });
+  list.querySelectorAll('.delp').forEach(btn=>{btn.addEventListener('click',async()=>{const i=allData.find(d=>d.__backendId===btn.dataset.id);if(i)await db.delete(i);});});
+  lucide.createIcons();
+}
+
+/* ================================================================
+   TEMPLATES
+================================================================ */
+const TEMPLATES=[
+  {id:'exam',title:'📋 Planning Examen',desc:'Organisation pour préparer un examen',col:'border-red-500/30',items:[{type:'task',title:'Relire les cours',priority:'high',due_date:gds(1)},{type:'task',title:'Fiches de révision',priority:'high',due_date:gds(2)},{type:'task',title:'Exercices pratiques',priority:'medium',due_date:gds(3)},{type:'task',title:'Révision finale',priority:'high',due_date:gds(5)},{type:'habit',title:'Réviser 1h/jour'}]},
+  {id:'groupe',title:'👥 Projet de Groupe',desc:'Tâches pour un travail d\'équipe',col:'border-blue-500/30',items:[{type:'task',title:'Réunion de lancement',priority:'high',due_date:gds(0)},{type:'task',title:'Répartition des tâches',priority:'high',due_date:gds(1)},{type:'task',title:'Recherches individuelles',priority:'medium',due_date:gds(4)},{type:'task',title:'Mise en commun',priority:'medium',due_date:gds(7)},{type:'task',title:'Présentation finale',priority:'high',due_date:gds(10)}]},
+  {id:'matin',title:'🌅 Routine Matinale',desc:'Habitudes pour bien commencer',col:'border-amber-500/30',items:[{type:'habit',title:'Se lever tôt'},{type:'habit',title:'Sport 15 min'},{type:'habit',title:'Lecture 10 min'},{type:'habit',title:'Réviser ses fiches'}]},
+  {id:'semaine',title:'⚡ Semaine Productive',desc:'Organisation hebdomadaire',col:'border-purple-500/30',items:[{type:'task',title:'Planification hebdo',priority:'high',due_date:gds(0)},{type:'task',title:'Devoirs du lundi',priority:'medium',due_date:gds(1)},{type:'task',title:'Devoirs du mercredi',priority:'medium',due_date:gds(3)},{type:'task',title:'Révisions weekend',priority:'low',due_date:gds(6)},{type:'habit',title:'Bilan de la journée'}]},
+  {id:'langues',title:'🌍 Apprendre une Langue',desc:'Programme quotidien d\'apprentissage',col:'border-green-500/30',items:[{type:'habit',title:'10 mots/jour'},{type:'habit',title:'Podcast en anglais'},{type:'habit',title:'Exercice de grammaire'},{type:'task',title:'Regarder une série VO',priority:'low',due_date:gds(2)}]},
+  {id:'sante',title:'💪 Santé & Équilibre',desc:'Habitudes pour rester en forme',col:'border-teal-500/30',items:[{type:'habit',title:'Sport 30 min'},{type:'habit',title:'Dormir 8h'},{type:'habit',title:'Boire 2L d\'eau'},{type:'habit',title:'Pas d\'écran 1h avant dodo'}]},
+];
+function renderTemplates() {
+  const grid=document.getElementById('templates-grid');if(!grid) return;
+  grid.innerHTML=TEMPLATES.map(t=>`
+    <div class="template-card glass rounded-2xl p-5 border ${t.col} hover:border-indigo-400 transition-all" data-tid="${t.id}">
+      <h3 class="text-sm font-bold text-slate-200 mb-1.5">${t.title}</h3>
+      <p class="text-xs text-slate-400 mb-3">${t.desc}</p>
+      <div class="space-y-1 mb-4">${t.items.slice(0,3).map(i=>`<p class="text-xs text-slate-500">• ${i.title}</p>`).join('')}${t.items.length>3?`<p class="text-xs text-slate-600">+${t.items.length-3} autres</p>`:''}</div>
+      <button class="w-full py-2 text-xs font-medium bg-indigo-500/15 text-indigo-300 border border-indigo-500/30 rounded-xl hover:bg-indigo-500/25 transition-all">📥 Importer ce modèle</button>
+    </div>`).join('');
+  grid.querySelectorAll('[data-tid]').forEach(card=>{
+    card.addEventListener('click',async()=>{
+      const t=TEMPLATES.find(x=>x.id===card.dataset.tid);if(!t) return;
+      let cnt=0;
+      for(const item of t.items){const r={type:item.type,title:item.title,description:`Modèle: ${t.title}`,completed:false,date:item.due_date||gds(0),time_start:'',time_end:'',category:item.type,priority:item.priority||'medium',streak_count:0,last_completed:'',project_content:'',created_at:new Date().toISOString(),due_date:item.due_date||'',tags:'template'};const res=await db.create(r);if(res.isOk)cnt++;}
+      toast(`✅ ${cnt} éléments importés depuis "${t.title}"!`);
+    });
+  });
+}
+
+/* ================================================================
+   OUTILS
+================================================================ */
+document.querySelectorAll('[data-tool]').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const tool=btn.dataset.tool;const c=document.getElementById('tool-content');c.innerHTML='';
+    if(tool==='calculator')bCalc(c);else if(tool==='converter')bConv(c);else if(tool==='timer')bTimer(c);else if(tool==='notes')bNotes(c);else if(tool==='word-counter')bWord(c);else if(tool==='password')bPass(c);else if(tool==='focus')bFocus(c);else if(tool==='gpa')bGPA(c);else if(tool==='colors')bColors(c);
+    lucide.createIcons();
+  });
+});
+function bCalc(p){p.innerHTML=`<div class="space-y-2"><input id="cd" type="text" readonly class="w-full text-right text-2xl font-bold glass border border-slate-600 p-3 rounded-xl text-indigo-400" value="0"><div class="grid grid-cols-4 gap-1.5">${['7','8','9','/','4','5','6','*','1','2','3','-','0','.','=','+'].map(v=>`<button class="cb p-3 rounded-xl text-sm font-semibold transition-all ${['/','*','-','+','='].includes(v)?(v==='='?'bg-green-600 text-white hover:bg-green-700':'bg-red-700 text-white hover:bg-red-800'):'glass border border-slate-600 text-slate-200 hover:border-indigo-500'}" data-v="${v}">${v==='/'?'÷':v==='*'?'×':v}</button>`).join('')}<button id="cc" class="col-span-2 p-3 rounded-xl text-sm font-semibold bg-amber-700 text-white hover:bg-amber-800">C</button></div></div>`;
+let v='0';const d=document.getElementById('cd');
+document.querySelectorAll('.cb').forEach(b=>b.addEventListener('click',()=>{const bv=b.dataset.v;if(bv==='='){try{v=eval(v).toString();}catch{v='Err';}d.value=v;}else{if(v==='0'&&!['.','/','*','-','+'].includes(bv))v=bv;else v+=bv;d.value=v;}}));
+document.getElementById('cc').addEventListener('click',()=>{v='0';d.value=v;});}
+function bConv(p){p.innerHTML=`<div class="space-y-3"><div class="grid grid-cols-2 gap-2"><input id="cv" type="number" placeholder="Valeur" class="input-field text-sm"><select id="cu" class="input-field text-sm"><option>m</option><option>km</option><option>cm</option><option>mm</option><option>ft</option><option>mi</option></select></div><div id="cr" class="p-3 glass border border-slate-700 rounded-xl text-sm text-slate-300 font-mono space-y-1">Entrez une valeur</div></div>`;
+function conv(){const v=parseFloat(document.getElementById('cv').value),u=document.getElementById('cu').value;if(isNaN(v)){document.getElementById('cr').innerHTML='Entrez une valeur';return;}let m=v;if(u==='km')m=v*1000;else if(u==='cm')m=v/100;else if(u==='mm')m=v/1000;else if(u==='ft')m=v*0.3048;else if(u==='mi')m=v*1609.34;document.getElementById('cr').innerHTML=`<div>${v} ${u} →</div><div>${m.toFixed(3)} m</div><div>${(m*100).toFixed(2)} cm</div><div>${(m*3.28084).toFixed(3)} ft</div><div>${(m/1000).toFixed(5)} km</div>`;}
+document.getElementById('cv').addEventListener('input',conv);document.getElementById('cu').addEventListener('change',conv);}
+function bTimer(p){let s=0,run=false,iv=null;p.innerHTML=`<div class="text-center space-y-4"><p id="td" class="text-5xl font-bold gradient-text font-mono">00:00</p><div class="flex gap-2 justify-center"><button id="ts" class="bg-green-700 text-white px-5 py-2 rounded-xl text-sm font-medium">▶ Start</button><button id="tp" class="bg-red-700 text-white px-5 py-2 rounded-xl text-sm font-medium" disabled>⏸ Stop</button><button id="tr" class="glass border border-slate-600 text-slate-300 px-5 py-2 rounded-xl text-sm font-medium">↺</button></div></div>`;
+const upd=()=>{const m=Math.floor(s/60),sec=s%60;document.getElementById('td').textContent=`${m.toString().padStart(2,'0')}:${sec.toString().padStart(2,'0')}`;};
+document.getElementById('ts').addEventListener('click',()=>{if(run)return;run=true;document.getElementById('ts').disabled=true;document.getElementById('tp').disabled=false;iv=setInterval(()=>{s++;upd();},1000);});
+document.getElementById('tp').addEventListener('click',()=>{run=false;clearInterval(iv);document.getElementById('ts').disabled=false;document.getElementById('tp').disabled=true;});
+document.getElementById('tr').addEventListener('click',()=>{run=false;clearInterval(iv);s=0;upd();document.getElementById('ts').disabled=false;document.getElementById('tp').disabled=true;});
+upd();}
+function bNotes(p){p.innerHTML=`<div class="space-y-3"><textarea id="qn" rows="8" placeholder="Notes rapides..." class="input-field text-sm resize-none"></textarea><button id="sn" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-2 rounded-xl text-sm font-medium">💾 Sauvegarder</button></div>`;
+document.getElementById('qn').value=localStorage.getItem('quick-notes')||'';
+document.getElementById('qn').addEventListener('input',()=>localStorage.setItem('quick-notes',document.getElementById('qn').value));
+document.getElementById('sn').addEventListener('click',()=>toast('📝 Sauvegardé!'));}
+function bWord(p){p.innerHTML=`<div class="space-y-3"><textarea id="wi" rows="7" placeholder="Colle ou tape ton texte ici..." class="input-field text-sm resize-none"></textarea><div class="grid grid-cols-4 gap-2"><div class="glass p-3 border border-slate-700 rounded-xl text-center"><p id="wc" class="text-xl font-bold text-indigo-400">0</p><p class="text-xs text-slate-500">Mots</p></div><div class="glass p-3 border border-slate-700 rounded-xl text-center"><p id="cc3" class="text-xl font-bold text-blue-400">0</p><p class="text-xs text-slate-500">Chars</p></div><div class="glass p-3 border border-slate-700 rounded-xl text-center"><p id="lc" class="text-xl font-bold text-green-400">0</p><p class="text-xs text-slate-500">Lignes</p></div><div class="glass p-3 border border-slate-700 rounded-xl text-center"><p id="rt" class="text-xl font-bold text-amber-400">0m</p><p class="text-xs text-slate-500">Lecture</p></div></div></div>`;
+document.getElementById('wi').addEventListener('input',e=>{const t=e.target.value;const w=t.trim().split(/\s+/).filter(x=>x).length;document.getElementById('wc').textContent=w;document.getElementById('cc3').textContent=t.length;document.getElementById('lc').textContent=t.split('\n').length;document.getElementById('rt').textContent=Math.ceil(w/200)+'m';});}
+function bPass(p){p.innerHTML=`<div class="space-y-3"><input id="po" type="text" readonly class="input-field text-sm font-mono text-indigo-300"><div class="grid grid-cols-2 gap-2"><label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" id="pu" checked class="w-4 h-4 accent-indigo-500"><span class="text-sm text-slate-300">Majuscules</span></label><label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" id="pl" checked class="w-4 h-4 accent-indigo-500"><span class="text-sm text-slate-300">Minuscules</span></label><label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" id="pn" checked class="w-4 h-4 accent-indigo-500"><span class="text-sm text-slate-300">Nombres</span></label><label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" id="ps" checked class="w-4 h-4 accent-indigo-500"><span class="text-sm text-slate-300">Symboles</span></label></div><div><label class="text-sm text-slate-400">Longueur: <span id="pld">16</span></label><input id="plen" type="range" min="8" max="32" value="16" class="w-full"></div><div class="grid grid-cols-2 gap-2"><button id="gp" class="bg-blue-700 text-white py-2 rounded-xl text-sm font-medium">🔐 Générer</button><button id="cp2" class="glass border border-slate-600 text-slate-300 py-2 rounded-xl text-sm font-medium">Copier</button></div></div>`;
+document.getElementById('plen').addEventListener('input',e=>document.getElementById('pld').textContent=e.target.value);
+function gen(){let c='';if(document.getElementById('pu').checked)c+='ABCDEFGHIJKLMNOPQRSTUVWXYZ';if(document.getElementById('pl').checked)c+='abcdefghijklmnopqrstuvwxyz';if(document.getElementById('pn').checked)c+='0123456789';if(document.getElementById('ps').checked)c+='!@#$%^&*_+-=[]{}|;:,.<>?';if(!c){toast('Sélectionne une option');return;}const l=parseInt(document.getElementById('plen').value);let pw='';for(let i=0;i<l;i++)pw+=c.charAt(Math.floor(Math.random()*c.length));document.getElementById('po').value=pw;}
+document.getElementById('gp').addEventListener('click',gen);document.getElementById('cp2').addEventListener('click',()=>{const v=document.getElementById('po').value;if(v){navigator.clipboard?.writeText(v);toast('✅ Copié!');}});gen();}
+function bFocus(p){p.innerHTML=`<div class="space-y-4"><p class="text-sm text-slate-400">🎯 Choisir la durée</p><div class="grid grid-cols-2 gap-2"><button class="fp glass border border-slate-600 text-slate-300 p-3 rounded-xl text-sm font-medium hover:border-indigo-400" data-t="25">25 min</button><button class="fp glass border border-slate-600 text-slate-300 p-3 rounded-xl text-sm font-medium hover:border-indigo-400" data-t="45">45 min</button><button class="fp glass border border-slate-600 text-slate-300 p-3 rounded-xl text-sm font-medium hover:border-indigo-400" data-t="60">1h</button><button class="fp glass border border-slate-600 text-slate-300 p-3 rounded-xl text-sm font-medium hover:border-indigo-400" data-t="90">1h30</button></div><p id="ft2" class="text-4xl font-bold text-center gradient-text font-mono">--:--</p><button id="sf" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-2 rounded-xl text-sm font-medium">🚀 Lancer le focus</button></div>`;
+let ft=0,fr=false,fiv=null;
+document.querySelectorAll('.fp').forEach(btn=>btn.addEventListener('click',()=>{ft=parseInt(btn.dataset.t)*60;document.getElementById('ft2').textContent=`${btn.dataset.t}:00`;}));
+document.getElementById('sf').addEventListener('click',()=>{if(ft<=0){toast('Sélectionne une durée');return;}if(fr)return;fr=true;toast('🎯 Focus lancé!');fiv=setInterval(()=>{ft--;const m=Math.floor(ft/60),s=ft%60;document.getElementById('ft2').textContent=`${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;if(ft<=0){clearInterval(fiv);fr=false;toast('✅ Session terminée!');}},1000);});}
+function bGPA(p){p.innerHTML=`<div class="space-y-3"><p class="text-sm text-slate-400">📈 Calculateur de moyenne pondérée</p><div id="gi" class="space-y-2"></div><button id="agg" class="w-full text-sm text-indigo-400 font-medium py-2 glass border border-dashed border-indigo-500/30 rounded-xl hover:bg-indigo-500/10 transition-all">+ Ajouter une matière</button><div class="p-4 glass border border-slate-700 rounded-xl"><p class="text-xs text-slate-500 mb-1">Résultat:</p><div class="text-3xl font-bold gradient-text" id="gr2">--</div></div></div>`;
+let items=[];
+function ri(){const c=document.getElementById('gi');c.innerHTML=items.map((x,i)=>`<div class="flex gap-2"><input type="number" min="0" max="20" step="0.5" value="${x.n}" placeholder="Note" class="input-field flex-1 text-sm gn"><input type="number" min="0.5" step="0.5" value="${x.c}" placeholder="Coeff" class="input-field w-20 text-sm gc"><button class="px-3 text-red-400 hover:text-red-300" onclick="this.parentElement.remove();ug2();">✕</button></div>`).join('');document.querySelectorAll('.gn,.gc').forEach(el=>el.addEventListener('change',ug2));}
+window.ug2=function(){items=Array.from(document.querySelectorAll('.gn')).map((el,i)=>({n:parseFloat(el.value)||0,c:parseFloat(document.querySelectorAll('.gc')[i]?.value)||1}));let tw=0,tc=0;items.forEach(x=>{tw+=x.n*x.c;tc+=x.c;});document.getElementById('gr2').textContent=tc>0?(tw/tc).toFixed(2):'--';};
+document.getElementById('agg').addEventListener('click',()=>{items.push({n:0,c:1});ri();});}
+function bColors(p){const cols=['#6366f1','#8b5cf6','#d946ef','#ec4899','#f43f5e','#f97316','#eab308','#22c55e','#14b8a6','#06b6d4','#3b82f6','#64748b'];
+p.innerHTML=`<div class="space-y-4"><p class="text-sm text-slate-400">🎨 Personnalise la couleur principale</p><div class="grid grid-cols-6 gap-3">${cols.map(c=>`<button class="cs w-10 h-10 rounded-xl border-2 border-transparent hover:border-white transition-all hover:scale-110" style="background:${c};" data-c="${c}"></button>`).join('')}</div><div class="flex items-center gap-3"><label class="text-xs text-slate-400">Custom:</label><input type="color" id="ccp" value="${customAccent}" class="w-10 h-10 rounded-xl cursor-pointer border border-slate-600 bg-transparent"></div><button id="brc" class="w-full py-2 text-xs glass border border-slate-600 text-slate-300 rounded-xl hover:border-slate-400">↺ Réinitialiser</button></div>`;
+p.querySelectorAll('.cs').forEach(btn=>btn.addEventListener('click',()=>{customAccent=btn.dataset.c;localStorage.setItem('custom_accent',customAccent);applyAccent(customAccent);toast('🎨 Couleur appliquée!');}));
+document.getElementById('ccp').addEventListener('input',e=>{customAccent=e.target.value;localStorage.setItem('custom_accent',customAccent);applyAccent(customAccent);});
+document.getElementById('brc').addEventListener('click',()=>{customAccent='#6366f1';localStorage.setItem('custom_accent',customAccent);applyAccent(customAccent);toast('↺ Réinitialisé!');});}
+
+/* ================================================================
+   LECTURE MODE
+================================================================ */
+function toggleLecture() {
+  isLecture=!isLecture;
+  document.body.classList.toggle('lecture-mode',isLecture);
+  toast(isLecture?'👁️ Mode lecture — édition désactivée':'✏️ Mode édition réactivé');
+}
+document.getElementById('btn-lecture-nav').addEventListener('click',toggleLecture);
+
+/* ================================================================
+   RECHERCHE
+================================================================ */
+function openSearch() {
+  document.getElementById('modal-search').classList.remove('hidden');
+  setTimeout(()=>document.getElementById('search-input').focus(),100);
+}
+document.getElementById('btn-search-nav').addEventListener('click',openSearch);
+document.querySelectorAll('.search-type').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.search-type').forEach(b=>{b.classList.remove('bg-indigo-500','text-white');b.classList.add('glass','border','border-slate-600','text-slate-300');});
+    btn.classList.add('bg-indigo-500','text-white');btn.classList.remove('glass','border','border-slate-600','text-slate-300');
+    searchTypeFilter=btn.dataset.stype;doSearch(document.getElementById('search-input').value);
+  });
+});
+document.getElementById('search-input').addEventListener('input',e=>doSearch(e.target.value));
+function doSearch(q){
+  const query=q.toLowerCase().trim();const results=document.getElementById('search-results');
+  if(!query){results.innerHTML='<p class="text-xs text-slate-500 text-center py-4">Tape pour rechercher…</p>';return;}
+  let items=allData.filter(d=>{
+    if(searchTypeFilter!=='all'&&d.type!==searchTypeFilter) return false;
+    return (d.title||'').toLowerCase().includes(query)||(d.description||'').toLowerCase().includes(query)||(d.tags||'').toLowerCase().includes(query)||(d.subject||'').toLowerCase().includes(query)||(d.priority||'').toLowerCase().includes(query);
+  });
+  if(!items.length){results.innerHTML='<p class="text-xs text-slate-500 text-center py-4">Aucun résultat</p>';return;}
+  const em={task:'✅',event:'📅',grade:'📝',homework:'📋',habit:'🔥',project:'📁'};
+  results.innerHTML=items.slice(0,15).map(i=>`<div class="flex items-center gap-3 p-3 glass rounded-xl border border-slate-700/60 hover:border-indigo-500/50 transition-all"><span class="text-lg shrink-0">${em[i.type]||'📌'}</span><div class="flex-1 min-w-0"><p class="text-sm font-medium text-slate-200 truncate">${i.title}</p><div class="flex items-center gap-2 mt-0.5"><span class="text-xs text-slate-500">${i.type}</span>${i.due_date?`<span class="text-xs text-slate-500">${fmtDate(i.due_date)}</span>`:''}</div></div>${i.type==='task'?`<div class="w-2 h-2 rounded-full ${i.completed?'bg-green-400':'bg-amber-400'} shrink-0"></div>`:''}</div>`).join('');
+}
+
+/* ================================================================
+   IA
+================================================================ */
+const aiChatEl = document.getElementById('ai-chat');
+document.querySelectorAll('.ai-mode-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.ai-mode-btn').forEach(b=>{b.classList.remove('active','bg-indigo-500','text-white');b.classList.add('glass','text-slate-300','border','border-slate-600');});
+    btn.classList.add('active','bg-indigo-500','text-white');btn.classList.remove('glass','text-slate-300','border','border-slate-600');
+    aiMode=btn.dataset.mode;
+    document.getElementById('ai-chat-mode').classList.toggle('hidden',aiMode!=='chat');
+    document.getElementById('ai-tutor-mode').classList.toggle('hidden',aiMode!=='tutor');
+    document.getElementById('ai-summary-mode').classList.toggle('hidden',aiMode!=='summary');
+  });
+});
+function addMsg(text,isUser){const m=document.createElement('div');m.className=`flex ${isUser?'justify-end':'justify-start'} fade-in`;m.innerHTML=`<div class="max-w-[80%] px-4 py-2.5 rounded-2xl text-sm ${isUser?'bg-indigo-600 text-white':'glass text-slate-200 border border-slate-700'}">${text}</div>`;aiChatEl.appendChild(m);aiChatEl.scrollTop=aiChatEl.scrollHeight;}
+function showTyping(){const el=document.createElement('div');el.id='ait';el.className='flex justify-start';el.innerHTML='<div class="ai-typing px-4 py-3 glass border border-slate-700 rounded-2xl"><span></span><span></span><span></span></div>';aiChatEl.appendChild(el);aiChatEl.scrollTop=aiChatEl.scrollHeight;}
+function hideTyping(){const el=document.getElementById('ait');if(el)el.remove();}
+function getAIResp(q){
+  const ql=q.toLowerCase();const avg=computeAvg();
+  const tot=allData.filter(d=>d.type==='task').length,done=allData.filter(d=>d.type==='task'&&d.completed).length;
+  if(ql.includes('moyenne')||ql.includes('note'))return avg>0?`📊 Ta moyenne est <strong>${avg.toFixed(2)}/20</strong>. ${avg>=15?'🌟 Excellent!':avg>=12?'👍 Bon niveau!':avg>=10?'⚠️ Tu passes mais peut mieux faire.':'🚨 Du travail est nécessaire.'}`:"📝 Aucune note encore. Ajoute-en dans l'onglet Notes!";
+  if(ql.includes('tâche')||ql.includes('todo'))return tot===0?'✅ Aucune tâche. Appuie sur + !': `📋 <strong>${tot} tâche${tot>1?'s':''}</strong>, <strong>${done} terminée${done>1?'s':''}</strong> (${Math.round((done/tot)*100)}%).`;
+  if(ql.includes('bonjour')||ql.includes('salut')||ql.includes('hello'))return `👋 Bonjour! Je suis ton assistant IA. Demande-moi tes stats, des conseils, ou utilise le mode <strong>Tuteur</strong> pour qu'on travaille ensemble!`;
+  if(ql.includes('conseil')||ql.includes('astuce')||ql.includes('aide')){const tips=['🎯 <strong>Pomodoro</strong>: 25 min travail + 5 min pause = efficacité maximale','🧠 <strong>Spaced Repetition</strong>: Révise à J+1, J+3, J+7, J+14','📝 <strong>Cornell</strong>: Divise ta page en notes / questions / résumé','⚡ <strong>Règle des 2 min</strong>: Fais immédiatement tout ce qui prend < 2 min','🌙 <strong>Sommeil</strong>: Le cerveau consolide la mémoire pendant la nuit, dors 8h!'];return tips[Math.floor(Math.random()*tips.length)];}
+  return '💡 Pose-moi des questions sur tes stats, demande des conseils, ou utilise le mode <strong>Tuteur</strong> pour qu\'on travaille un cours ensemble!';
+}
+document.getElementById('btn-ai-send').addEventListener('click',()=>{
+  const inp=document.getElementById('ai-input');const msg=inp.value.trim();if(!msg) return;
+  addMsg(msg,true);inp.value='';showTyping();
+  setTimeout(()=>{hideTyping();addMsg(getAIResp(msg).replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>'),false);},700+Math.random()*400);
+});
+document.getElementById('ai-input').addEventListener('keypress',e=>{if(e.key==='Enter')document.getElementById('btn-ai-send').click();});
+document.getElementById('btn-tutor-ask').addEventListener('click',()=>{
+  const subj=document.getElementById('tutor-subject').value;const q=document.getElementById('tutor-question').value.trim();
+  if(!q){toast('Pose une question!');return;}
+  const btn=document.getElementById('btn-tutor-ask');btn.textContent='⏳...';btn.disabled=true;
+  setTimeout(()=>{
+    const reps={'Mathématiques':`📐 En <strong>Mathématiques</strong>:\n1. Bien lire l'énoncé et identifier les données\n2. Choisir les formules/théorèmes adaptés\n3. Appliquer pas à pas, sans sauter d'étapes\n4. Vérifier le résultat et les unités\n\n💡 Fais un schéma quand c'est possible!`,'Français':`📖 En <strong>Français</strong>:\n• Dissertation: Thèse → Antithèse → Synthèse\n• Commentaire: Introduction (accroche + présentation) → 2-3 axes → Conclusion\n\n💡 Plan détaillé avant d'écrire = 50% du travail fait!`};
+    const def=`🎓 Pour ta question en <strong>${subj}</strong>:\n\n1. Identifie les concepts clés du cours\n2. Applique une méthode structurée\n3. Entraîne-toi avec des exercices\n4. Révise en espaçant: J+1, J+3, J+7`;
+    const r=reps[subj]||def;
+    const re=document.getElementById('tutor-response');re.classList.remove('hidden');
+    re.innerHTML=r.replace(/\*\*(.*?)\*\*/g,'<strong class="text-indigo-300">$1</strong>').replace(/\n/g,'<br>');
+    btn.textContent='🎓 Demander au tuteur';btn.disabled=false;
+  },900);
+});
+document.getElementById('btn-summarize').addEventListener('click',()=>{
+  const text=document.getElementById('summary-input').value.trim();
+  if(!text||text.length<80){toast(text.length<80?'Texte trop court!':'Colle un cours d\'abord!');return;}
+  const btn=document.getElementById('btn-summarize');btn.textContent='⏳ Analyse...';btn.disabled=true;
+  setTimeout(()=>{
+    const words=text.split(/\s+/).filter(w=>w.length>0);
+    const sentences=text.split(/[.!?]+/).filter(s=>s.trim().length>20);
+    const wf={};words.forEach(w=>{const c=w.toLowerCase().replace(/[^a-zàéèêëùûîïôç]/g,'');if(c.length>3)wf[c]=(wf[c]||0)+1;});
+    const topW=Object.entries(wf).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([w])=>w);
+    const res=document.getElementById('summary-result');res.classList.remove('hidden');
+    res.innerHTML=`<div class="space-y-4">
+      <div><p class="text-xs font-bold text-purple-300 mb-2">📊 Statistiques</p><div class="grid grid-cols-3 gap-2">${[{v:words.length,l:'mots',c:'text-indigo-400'},{v:sentences.length,l:'phrases',c:'text-green-400'},{v:Math.ceil(words.length/200)+'m',l:'lecture',c:'text-amber-400'}].map(x=>`<div class="glass rounded-xl p-2.5 border border-slate-700 text-center"><p class="text-lg font-bold ${x.c}">${x.v}</p><p class="text-xs text-slate-500">${x.l}</p></div>`).join('')}</div></div>
+      <div><p class="text-xs font-bold text-purple-300 mb-2">🔑 Mots-clés</p><div class="flex flex-wrap gap-1.5">${topW.map(w=>`<span class="px-2 py-0.5 bg-indigo-500/20 text-indigo-300 rounded-lg text-xs">${w}</span>`).join('')}</div></div>
+      <div><p class="text-xs font-bold text-purple-300 mb-2">📝 Points essentiels</p><div class="space-y-1">${sentences.slice(0,Math.min(4,Math.ceil(sentences.length*0.2))).map(s=>`<p class="text-xs text-slate-300">• ${s.trim().substring(0,130)}${s.trim().length>130?'...':''}</p>`).join('')}</div></div>
+      <div><p class="text-xs font-bold text-purple-300 mb-2">💡 Conseil</p><p class="text-xs text-slate-400">Ce cours = ~${sentences.length} idées. Crée <strong class="text-indigo-300">${Math.ceil(sentences.length/3)} fiches</strong> et révise avec la méthode Spaced Repetition.</p></div>
+    </div>`;
+    btn.textContent='📄 Résumer le cours';btn.disabled=false;toast('📄 Résumé généré!');
+  },1500);
+});
+
+/* ================================================================
+   SETTINGS
+================================================================ */
+document.getElementById('btn-export').addEventListener('click',()=>{
+  const url=URL.createObjectURL(new Blob([JSON.stringify(allData,null,2)],{type:'application/json'}));
+  const a=document.createElement('a');a.href=url;a.download=`productiv-${gds(0)}.json`;a.click();URL.revokeObjectURL(url);toast('📥 Exporté!');
+});
+document.getElementById('btn-clear-data').addEventListener('click',()=>{
+  if(!confirm('Effacer toutes les données? Cette action est irréversible.')) return;
+  if(window.dataSdk){allData.forEach(async i=>{if(i.__backendId)await window.dataSdk.delete(i);});}
+  else{localDB.save([]);allData=[];refreshAll();}
+  toast('🗑️ Données effacées');
+});
+
+/* ================================================================
+   LANCEMENT
+================================================================ */
+init();
+setTimeout(()=>{lucide.createIcons();renderHome();renderBadges();checkBadges();},400);
+</script>
+</body>
+</html>
